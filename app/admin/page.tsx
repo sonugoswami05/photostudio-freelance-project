@@ -4,12 +4,16 @@ import { useState, useEffect, useRef } from "react";
 import { useModal } from "@/contexts/ModalContext";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { Trash2, Upload, LogOut } from "lucide-react";
+import { Trash2, Upload, LogOut, Pencil, X, Check, Plus } from "lucide-react";
+import servicesData from "@/data/services.json";
 
 interface GalleryImage { id: string; url: string; caption: string | null; category: string | null; }
+interface Service { id: string; title: string; description: string; image_url: string; sort_order: number; }
 
 export default function AdminPage() {
   const { user, logout } = useModal();
+
+  // gallery / config state
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [logoUrl, setLogoUrl] = useState("");
   const [heroUrl, setHeroUrl] = useState("");
@@ -17,10 +21,25 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [authChecked, setAuthChecked] = useState(false);
+  const [contactBgUrl, setContactBgUrl] = useState("");
+
+  // services state
+  const [services, setServices] = useState<Service[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", description: "" });
+  const [addingService, setAddingService] = useState(false);
+  const [newSvc, setNewSvc] = useState({ title: "", description: "" });
+  const [serviceTableMissing, setServiceTableMissing] = useState(false);
+
+  // refs
   const galleryRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
   const heroRef = useRef<HTMLInputElement>(null);
   const aboutRef = useRef<HTMLInputElement>(null);
+  const contactBgRef = useRef<HTMLInputElement>(null);
+  const svcImgRef = useRef<HTMLInputElement>(null);
+  const newSvcImgRef = useRef<HTMLInputElement>(null);
+  const [pendingSvcImgId, setPendingSvcImgId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setAuthChecked(true), 1500);
@@ -32,16 +51,37 @@ export default function AdminPage() {
   }, [user]);
 
   const loadData = async () => {
-    const [{ data: imgs }, { data: cfg }] = await Promise.all([
+    const [{ data: imgs }, { data: cfg }, { data: svcs, error: svcsErr }] = await Promise.all([
       supabase.from("gallery_images").select("*").order("created_at", { ascending: false }),
       supabase.from("site_config").select("*"),
+      supabase.from("services").select("*").order("sort_order", { ascending: true }),
     ]);
+
     if (imgs) setGallery(imgs);
     if (cfg) {
       setLogoUrl(cfg.find((r) => r.key === "logo")?.value || "");
       setHeroUrl(cfg.find((r) => r.key === "hero_image")?.value || "");
       setAboutUrl(cfg.find((r) => r.key === "about_image")?.value || "");
+      setContactBgUrl(cfg.find((r) => r.key === "contact_bg")?.value || "");
     }
+    if (svcsErr) {
+      setServiceTableMissing(true);
+    } else if (svcs && svcs.length > 0) {
+      setServices(svcs);
+    } else if (svcs && svcs.length === 0) {
+      await seedServices();
+    }
+  };
+
+  const seedServices = async () => {
+    const rows = servicesData.map((s, i) => ({
+      title: s.title,
+      description: s.description,
+      image_url: s.image,
+      sort_order: i,
+    }));
+    const { data } = await supabase.from("services").insert(rows).select();
+    if (data) setServices(data);
   };
 
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
@@ -53,9 +93,9 @@ export default function AdminPage() {
     return publicUrl;
   };
 
+  // ── Gallery ──────────────────────────────────────────
   const handleGalleryUpload = async (files: FileList) => {
-    setUploading("gallery");
-    setStatus("");
+    setUploading("gallery"); setStatus("");
     for (const file of Array.from(files)) {
       const url = await uploadFile(file, "gallery");
       if (url) await supabase.from("gallery_images").insert({ url, caption: null, category: null });
@@ -63,20 +103,6 @@ export default function AdminPage() {
     await loadData();
     setUploading(null);
     setStatus(`✓ ${files.length} image${files.length > 1 ? "s" : ""} uploaded!`);
-  };
-
-  const handleConfigUpload = async (file: File, key: string) => {
-    setUploading(key);
-    setStatus("");
-    const url = await uploadFile(file, key);
-    if (url) {
-      await supabase.from("site_config").upsert({ key, value: url, updated_at: new Date().toISOString() });
-      if (key === "logo") setLogoUrl(url);
-      if (key === "hero_image") setHeroUrl(url);
-      if (key === "about_image") setAboutUrl(url);
-      setStatus("✓ Image updated! Rebuild the site to see changes.");
-    }
-    setUploading(null);
   };
 
   const deleteGalleryImage = async (img: GalleryImage) => {
@@ -88,6 +114,87 @@ export default function AdminPage() {
     setStatus("✓ Image deleted.");
   };
 
+  // ── Site Config ───────────────────────────────────────
+  const handleConfigUpload = async (file: File, key: string) => {
+    setUploading(key); setStatus("");
+    const url = await uploadFile(file, key);
+    if (url) {
+      await supabase.from("site_config").upsert({ key, value: url, updated_at: new Date().toISOString() });
+      if (key === "logo") setLogoUrl(url);
+      if (key === "hero_image") setHeroUrl(url);
+      if (key === "about_image") setAboutUrl(url);
+      if (key === "contact_bg") setContactBgUrl(url);
+      setStatus("✓ Image updated!");
+    }
+    setUploading(null);
+  };
+
+  // ── Services ─────────────────────────────────────────
+  const startEdit = (svc: Service) => {
+    setEditingId(svc.id);
+    setEditForm({ title: svc.title, description: svc.description });
+  };
+
+  const cancelEdit = () => { setEditingId(null); };
+
+  const saveEdit = async (id: string) => {
+    const { error } = await supabase.from("services")
+      .update({ title: editForm.title, description: editForm.description })
+      .eq("id", id);
+    if (!error) {
+      setServices((s) => s.map((sv) => sv.id === id ? { ...sv, ...editForm } : sv));
+      setEditingId(null);
+      setStatus("✓ Service updated.");
+    } else {
+      setStatus("Error: " + error.message);
+    }
+  };
+
+  const deleteService = async (id: string) => {
+    if (!confirm("Delete this service?")) return;
+    await supabase.from("services").delete().eq("id", id);
+    setServices((s) => s.filter((sv) => sv.id !== id));
+    setStatus("✓ Service deleted.");
+  };
+
+  const handleServiceImageUpload = async (id: string, file: File) => {
+    setUploading("svc-" + id); setStatus("");
+    const url = await uploadFile(file, "services");
+    if (url) {
+      await supabase.from("services").update({ image_url: url }).eq("id", id);
+      setServices((s) => s.map((sv) => sv.id === id ? { ...sv, image_url: url } : sv));
+      setStatus("✓ Service image updated.");
+    }
+    setUploading(null);
+    setPendingSvcImgId(null);
+  };
+
+  const handleAddService = async (imageFile: File | null) => {
+    if (!newSvc.title.trim()) { setStatus("Please enter a title."); return; }
+    setUploading("new-svc"); setStatus("");
+    let imageUrl = "";
+    if (imageFile) {
+      const url = await uploadFile(imageFile, "services");
+      if (url) imageUrl = url;
+    }
+    const { data, error } = await supabase.from("services").insert({
+      title: newSvc.title,
+      description: newSvc.description,
+      image_url: imageUrl,
+      sort_order: services.length,
+    }).select().single();
+    if (data) {
+      setServices((s) => [...s, data]);
+      setNewSvc({ title: "", description: "" });
+      setAddingService(false);
+      setStatus("✓ New service added.");
+    } else {
+      setStatus("Error: " + error?.message);
+    }
+    setUploading(null);
+  };
+
+  // ── Auth guards ───────────────────────────────────────
   if (!authChecked || (!user && !authChecked)) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fafafa" }}>
       <div style={{ textAlign: "center", padding: 40 }}>
@@ -107,6 +214,19 @@ export default function AdminPage() {
     </div>
   );
 
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  if (ADMIN_EMAIL && user.email !== ADMIN_EMAIL) return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fafafa" }}>
+      <div style={{ textAlign: "center", padding: 40, maxWidth: 400 }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+        <p style={{ fontSize: 20, fontWeight: 700, color: "#333", marginBottom: 8 }}>Access Denied</p>
+        <p style={{ fontSize: 14, color: "#888", marginBottom: 24 }}>You do not have permission to access the admin panel. Please log in with the admin account.</p>
+        <a href="/" style={{ color: "#E8906D", fontWeight: 600, fontSize: 14 }}>← Go to website</a>
+      </div>
+    </div>
+  );
+
+  // ── Render ────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       {/* Header */}
@@ -147,7 +267,7 @@ export default function AdminPage() {
           </div>
         </Card>
 
-        {/* ── Hero Image ── */}
+        {/* ── Hero ── */}
         <Card title="Hero Background" subtitle="The main background on the homepage — supports image or video">
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
             {heroUrl && (
@@ -171,7 +291,7 @@ export default function AdminPage() {
           </div>
         </Card>
 
-        {/* ── About Image ── */}
+        {/* ── About ── */}
         <Card title="About Us Image" subtitle="The photo shown in the About Us section">
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
             {aboutUrl && (
@@ -188,18 +308,154 @@ export default function AdminPage() {
           </div>
         </Card>
 
+        {/* ── Contact Background ── */}
+        <Card title="Contact Section Background" subtitle="Photo shown behind the Contact Us section — the studio photo works great here">
+          <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+            {contactBgUrl && (
+              <div style={{ position: "relative", width: 280, height: 160, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+                <Image src={contactBgUrl} alt="Contact BG" fill style={{ objectFit: "cover" }} unoptimized />
+              </div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
+              <p style={{ fontSize: 13, color: "#777", margin: 0 }}>JPG/PNG (recommended 1920×1080). A dark overlay is applied automatically.</p>
+              <input ref={contactBgRef} type="file" accept="image/*" style={{ display: "none" }}
+                onChange={(e) => e.target.files?.[0] && handleConfigUpload(e.target.files[0], "contact_bg")} />
+              <UploadBtn loading={uploading === "contact_bg"} onClick={() => contactBgRef.current?.click()} />
+            </div>
+          </div>
+        </Card>
+
+        {/* ── Services ── */}
+        <Card title={`We Offer — Services (${services.length})`} subtitle="Add, edit, or remove the service categories shown on the homepage">
+          {serviceTableMissing ? (
+            <div style={{ background: "#fff5f5", border: "1px solid #fed7d7", borderRadius: 8, padding: 16 }}>
+              <p style={{ fontSize: 14, color: "#c53030", fontWeight: 600, marginBottom: 8 }}>⚠ Services table not found in Supabase</p>
+              <p style={{ fontSize: 13, color: "#555", marginBottom: 12 }}>Run this SQL in your Supabase dashboard → SQL Editor:</p>
+              <pre style={{ background: "#1a1a1a", color: "#e2e8f0", borderRadius: 6, padding: 14, fontSize: 12, overflowX: "auto", lineHeight: 1.6 }}>{`CREATE TABLE services (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  title text NOT NULL,
+  description text DEFAULT '',
+  image_url text DEFAULT '',
+  sort_order integer DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read" ON services FOR SELECT USING (true);
+CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticated');`}</pre>
+              <button onClick={() => { setServiceTableMissing(false); loadData(); }} style={{ marginTop: 12, background: "#E8906D", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                I've run the SQL — Retry
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Hidden file inputs for service images */}
+              <input ref={svcImgRef} type="file" accept="image/*" style={{ display: "none" }}
+                onChange={(e) => {
+                  if (e.target.files?.[0] && pendingSvcImgId) {
+                    handleServiceImageUpload(pendingSvcImgId, e.target.files[0]);
+                    e.target.value = "";
+                  }
+                }} />
+
+              {/* Service rows */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {services.map((svc) => {
+                  const isEditing = editingId === svc.id;
+                  const isUploading = uploading === "svc-" + svc.id;
+                  return (
+                    <div key={svc.id} style={{ display: "flex", gap: 16, alignItems: "flex-start", border: "1px solid #f0f0f0", borderRadius: 10, padding: 14, background: isEditing ? "#fef9f6" : "#fff" }}>
+                      {/* Thumbnail */}
+                      <div style={{ position: "relative", width: 90, height: 68, borderRadius: 6, overflow: "hidden", background: "#f5f5f5", flexShrink: 0 }}>
+                        {svc.image_url
+                          ? <Image src={svc.image_url} alt={svc.title} fill style={{ objectFit: "cover" }} unoptimized />
+                          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#ccc" }}>No image</div>
+                        }
+                        {/* Change image overlay */}
+                        <button
+                          onClick={() => { setPendingSvcImgId(svc.id); svcImgRef.current?.click(); }}
+                          disabled={isUploading}
+                          style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
+                          title="Change image"
+                        >
+                          {isUploading ? <span style={{ fontSize: 10, color: "#fff" }}>…</span> : <Upload size={14} color="#fff" />}
+                        </button>
+                      </div>
+
+                      {/* Content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {isEditing ? (
+                          <>
+                            <input
+                              value={editForm.title}
+                              onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 14, fontWeight: 600, marginBottom: 8, boxSizing: "border-box" }}
+                              placeholder="Service title"
+                            />
+                            <textarea
+                              value={editForm.description}
+                              onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                              rows={3}
+                              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 13, resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }}
+                              placeholder="Description"
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: "#222", margin: "0 0 4px" }}>{svc.title}</p>
+                            <p style={{ fontSize: 12, color: "#777", margin: 0, lineHeight: 1.5 }}>{svc.description || <span style={{ color: "#ccc" }}>No description</span>}</p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                        {isEditing ? (
+                          <>
+                            <button onClick={() => saveEdit(svc.id)} style={{ ...iconBtn, background: "#E8906D", color: "#fff" }} title="Save"><Check size={13} /></button>
+                            <button onClick={cancelEdit} style={{ ...iconBtn }} title="Cancel"><X size={13} /></button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => startEdit(svc)} style={{ ...iconBtn }} title="Edit"><Pencil size={13} /></button>
+                            <button onClick={() => deleteService(svc.id)} style={{ ...iconBtn, color: "#e53e3e" }} title="Delete"><Trash2 size={13} /></button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add new service */}
+              {addingService ? (
+                <AddServiceForm
+                  value={newSvc}
+                  onChange={setNewSvc}
+                  onSave={handleAddService}
+                  onCancel={() => { setAddingService(false); setNewSvc({ title: "", description: "" }); }}
+                  loading={uploading === "new-svc"}
+                />
+              ) : (
+                <button
+                  onClick={() => setAddingService(true)}
+                  style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8, background: "none", border: "2px dashed #E8906D", borderRadius: 8, padding: "12px 20px", color: "#E8906D", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%" }}
+                >
+                  <Plus size={16} /> Add New Service
+                </button>
+              )}
+            </>
+          )}
+        </Card>
+
         {/* ── Gallery ── */}
         <Card title={`Portfolio Gallery (${gallery.length} photos)`} subtitle="These photos appear in the Portfolio section on the homepage">
-          {/* Upload area */}
           <div
             onClick={() => galleryRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files; if (f.length) handleGalleryUpload(f); }}
-            style={{
-              border: "2px dashed #E8906D", borderRadius: 10, padding: "28px 20px",
-              textAlign: "center", cursor: "pointer", marginBottom: 24, background: "#FEF0EA",
-              transition: "background 0.2s",
-            }}
+            style={{ border: "2px dashed #E8906D", borderRadius: 10, padding: "28px 20px", textAlign: "center", cursor: "pointer", marginBottom: 24, background: "#FEF0EA" }}
           >
             <Upload size={28} color="#E8906D" style={{ marginBottom: 8 }} />
             <p style={{ fontSize: 15, fontWeight: 600, color: "#E8906D", margin: "0 0 4px" }}>
@@ -210,7 +466,6 @@ export default function AdminPage() {
               onChange={(e) => e.target.files?.length && handleGalleryUpload(e.target.files)} />
           </div>
 
-          {/* Grid */}
           {gallery.length === 0 ? (
             <p style={{ textAlign: "center", color: "#aaa", fontSize: 14 }}>No photos yet. Upload your first photo above.</p>
           ) : (
@@ -220,12 +475,7 @@ export default function AdminPage() {
                   <Image src={img.url} alt="" fill style={{ objectFit: "cover" }} unoptimized />
                   <button
                     onClick={() => deleteGalleryImage(img)}
-                    style={{
-                      position: "absolute", top: 6, right: 6,
-                      width: 28, height: 28, borderRadius: "50%",
-                      background: "rgba(0,0,0,0.6)", border: "none", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}
+                    style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                     title="Delete"
                   >
                     <Trash2 size={13} color="#fff" />
@@ -235,6 +485,83 @@ export default function AdminPage() {
             </div>
           )}
         </Card>
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────
+
+const iconBtn: React.CSSProperties = {
+  width: 30, height: 30, borderRadius: 6, border: "1px solid #e0e0e0",
+  background: "#fff", cursor: "pointer", display: "flex",
+  alignItems: "center", justifyContent: "center", color: "#555",
+};
+
+function AddServiceForm({
+  value, onChange, onSave, onCancel, loading,
+}: {
+  value: { title: string; description: string };
+  onChange: (v: { title: string; description: string }) => void;
+  onSave: (img: File | null) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [imgFile, setImgFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleImg = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setImgFile(f);
+    setPreview(URL.createObjectURL(f));
+  };
+
+  return (
+    <div style={{ marginTop: 16, border: "1px solid #E8906D", borderRadius: 10, padding: 16, background: "#fef9f6" }}>
+      <p style={{ fontSize: 14, fontWeight: 600, color: "#E8906D", marginBottom: 12 }}>New Service</p>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        {/* Image picker */}
+        <div
+          onClick={() => fileRef.current?.click()}
+          style={{ width: 90, height: 68, borderRadius: 6, border: "2px dashed #E8906D", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, overflow: "hidden", background: "#fff", position: "relative" }}
+        >
+          {preview
+            ? <Image src={preview} alt="preview" fill style={{ objectFit: "cover" }} unoptimized />
+            : <Upload size={18} color="#E8906D" />
+          }
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImg} />
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <input
+            value={value.title}
+            onChange={(e) => onChange({ ...value, title: e.target.value })}
+            placeholder="Service title *"
+            style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 14, marginBottom: 8, boxSizing: "border-box" }}
+          />
+          <textarea
+            value={value.description}
+            onChange={(e) => onChange({ ...value, description: e.target.value })}
+            placeholder="Short description"
+            rows={3}
+            style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 13, resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+        <button
+          onClick={() => onSave(imgFile)}
+          disabled={loading}
+          style={{ background: loading ? "#ccc" : "#E8906D", border: "none", borderRadius: 6, padding: "8px 20px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}
+        >
+          {loading ? "Saving…" : "Add Service"}
+        </button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd", borderRadius: 6, padding: "8px 16px", fontSize: 13, cursor: "pointer", color: "#555" }}>
+          Cancel
+        </button>
       </div>
     </div>
   );
@@ -252,12 +579,7 @@ function Card({ title, subtitle, children }: { title: string; subtitle: string; 
 
 function UploadBtn({ loading, onClick }: { loading: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} disabled={loading} style={{
-      display: "flex", alignItems: "center", gap: 8,
-      padding: "10px 20px", background: loading ? "#ccc" : "#E8906D",
-      border: "none", borderRadius: 8, color: "#fff", fontSize: 14,
-      fontWeight: 600, cursor: loading ? "not-allowed" : "pointer",
-    }}>
+    <button onClick={onClick} disabled={loading} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: loading ? "#ccc" : "#E8906D", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}>
       <Upload size={16} />
       {loading ? "Uploading…" : "Upload New Image"}
     </button>

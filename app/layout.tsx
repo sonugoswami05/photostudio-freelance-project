@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Open_Sans } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { ModalProvider } from "@/contexts/ModalContext";
 import TopBar from "@/components/layout/TopBar";
@@ -45,6 +46,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <EnquireModal />
           <ProfileModal />
         </ModalProvider>
+        {/* Hidden Google Translate element */}
+        <div id="google_translate_element" style={{ display: "none" }} />
+        <Script id="gt-init" strategy="afterInteractive">{`
+          function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+              pageLanguage: 'en',
+              includedLanguages: 'en,hi,mr,bn,ta,gu,kn,ml,te,pa',
+              autoDisplay: false,
+            }, 'google_translate_element');
+          }
+          window.__changeLang = function(lang) {
+            var sel = document.querySelector('.goog-te-combo');
+            if (sel) { sel.value = lang; sel.dispatchEvent(new Event('change')); }
+          };
+        `}</Script>
+        <Script
+          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

@@ -37,13 +37,13 @@ export default function Hero() {
         }} />
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, minHeight: "58vh", display: "flex", alignItems: "center" }}>
+      <div className="hero-inner" style={{ position: "relative", zIndex: 1, minHeight: "58vh", display: "flex", alignItems: "center" }}>
         <div className="hero-content" style={{ paddingLeft: "clamp(25px, 5vw, 80px)", paddingRight: 16, maxWidth: 520 }}>
-          <h1 style={{
+          <h1 className="hero-h1" style={{
             fontFamily: "var(--font-display)", fontSize: "clamp(28px, 5vw, 56px)",
             fontWeight: 700, fontStyle: "italic", color: "#222", lineHeight: 1.2, margin: "0 0 10px",
           }}>New Alankar Studio</h1>
-          <p style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "#555", margin: "0 0 28px", letterSpacing: "0.04em" }}>
+          <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "#555", margin: "0 0 28px", letterSpacing: "0.04em" }}>
             the creator
           </p>
           <button
@@ -63,8 +63,25 @@ export default function Hero() {
 
       <style>{`
         @media (max-width: 767px) {
-          .hero-gradient { background: rgba(255,255,255,0.88) !important; }
-          .hero-content { padding-left: 20px !important; padding-right: 20px !important; max-width: 100% !important; text-align: center; display: flex; flex-direction: column; align-items: center; }
+          .hero-gradient {
+            background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.05) 100%) !important;
+          }
+          .hero-inner {
+            align-items: flex-end !important;
+            padding-bottom: 44px;
+            min-height: 65vh !important;
+          }
+          .hero-content {
+            padding-left: 24px !important;
+            padding-right: 24px !important;
+            max-width: 100% !important;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .hero-h1 { color: #fff !important; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+          .hero-sub { color: rgba(255,255,255,0.8) !important; letter-spacing: 0.12em !important; text-transform: uppercase; font-size: 12px !important; }
         }
       `}</style>
     </section>

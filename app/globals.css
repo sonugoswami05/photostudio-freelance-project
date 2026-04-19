@@ -87,6 +87,109 @@ button, a, [role="button"] {
   -webkit-user-select: none;
 }
 
+/* ═══════════════════════════════════════════
+   SECTION ANIMATED BACKGROUNDS
+═══════════════════════════════════════════ */
+
+/* Gallery — deep cosmic dark with drifting light orbs */
+.section-gallery {
+  background: #08080f;
+  position: relative;
+  overflow: hidden;
+}
+.section-gallery::before {
+  content: '';
+  position: absolute;
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,144,109,0.08) 0%, transparent 65%);
+  top: -200px; left: -150px;
+  animation: orbDrift 18s ease-in-out infinite;
+  pointer-events: none;
+}
+.section-gallery::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(80,120,220,0.06) 0%, transparent 65%);
+  bottom: -100px; right: -80px;
+  animation: orbDrift 22s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+
+/* Services — warm animated cream */
+.section-services {
+  background: linear-gradient(135deg,
+    #fdf8f2 0%, #fff3e8 20%, #fef6ee 40%,
+    #fff0e0 60%, #fdf8f2 80%, #fff3e8 100%);
+  background-size: 300% 300%;
+  animation: warmFlow 10s ease infinite;
+}
+
+/* Testimonials — dark velvet with center glow */
+.section-testimonials {
+  background: linear-gradient(135deg, #120a06 0%, #1f1008 50%, #120a06 100%);
+  background-size: 200% 200%;
+  animation: darkBreath 8s ease infinite;
+  position: relative;
+  overflow: hidden;
+}
+.section-testimonials::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(232,144,109,0.12) 0%, transparent 70%);
+  animation: testimonialPulse 5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* About — soft warm daylight */
+.section-about {
+  background: linear-gradient(135deg, #faf6f1 0%, #f5ede3 50%, #faf6f1 100%);
+  background-size: 200% 200%;
+  animation: warmFlow 12s ease infinite;
+}
+
+/* Contact — dark studio atmosphere */
+.section-contact {
+  background: #080d12;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Keyframes ── */
+@keyframes orbDrift {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  25%  { transform: translate(40px, -30px) scale(1.06); }
+  50%  { transform: translate(-20px, 40px) scale(0.94); }
+  75%  { transform: translate(25px, 15px) scale(1.03); }
+}
+@keyframes warmFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes darkBreath {
+  0%, 100% { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+}
+@keyframes testimonialPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%  { opacity: 1; transform: scale(1.08); }
+}
+@keyframes studioLightFloat {
+  0%, 100% { transform: translate(0, 0); opacity: 0.8; }
+  33%  { transform: translate(-30px, 20px); opacity: 1; }
+  66%  { transform: translate(20px, -25px); opacity: 0.6; }
+}
+
+/* Hide Google Translate toolbar */
+.goog-te-banner-frame, .goog-te-balloon-frame { display: none !important; }
+body { top: 0 !important; }
+.goog-logo-link, .goog-te-gadget span { display: none !important; }
+
 /* Thin scrollbar */
 ::-webkit-scrollbar {
   width: 4px;

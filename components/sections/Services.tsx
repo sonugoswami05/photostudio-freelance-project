@@ -1,17 +1,32 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useModal } from "@/contexts/ModalContext";
+import { supabase } from "@/lib/supabase";
 import servicesData from "@/data/services.json";
+
+interface Service { id: string; title: string; description: string; image_url: string; sort_order: number; }
+
+const fallback: Service[] = servicesData.map((s, i) => ({
+  id: String(s.id), title: s.title, description: s.description, image_url: s.image, sort_order: i,
+}));
 
 export default function Services() {
   const { openEnquire } = useModal();
+  const [services, setServices] = useState<Service[]>(fallback);
 
-  const row1 = servicesData.slice(0, 5);
-  const row2 = servicesData.slice(5, 10);
+  useEffect(() => {
+    supabase.from("services").select("*").order("sort_order", { ascending: true })
+      .then(({ data }) => { if (data && data.length > 0) setServices(data); });
+  }, []);
+
+  const chunkSize = 5;
+  const rows: Service[][] = [];
+  for (let i = 0; i < services.length; i += chunkSize) rows.push(services.slice(i, i + chunkSize));
 
   return (
-    <section id="services" style={{ padding: "45px 0", background: "#fff", borderTop: "1px solid #f0f0f0" }}>
+    <section id="services" className="section-services" style={{ padding: "45px 0" }}>
       <div className="wrap">
         <h2
           style={{
@@ -26,19 +41,13 @@ export default function Services() {
           We Offer
         </h2>
 
-        {/* Row 1 */}
-        <div className="services-grid" style={{ marginBottom: 20 }}>
-          {row1.map((s) => (
-            <ServiceCard key={s.id} service={s} onEnquire={openEnquire} />
-          ))}
-        </div>
-
-        {/* Row 2 */}
-        <div className="services-grid">
-          {row2.map((s) => (
-            <ServiceCard key={s.id} service={s} onEnquire={openEnquire} />
-          ))}
-        </div>
+        {rows.map((row, ri) => (
+          <div key={ri} className="services-grid" style={{ marginBottom: ri < rows.length - 1 ? 20 : 0 }}>
+            {row.map((s) => (
+              <ServiceCard key={s.id} service={s} onEnquire={openEnquire} />
+            ))}
+          </div>
+        ))}
       </div>
 
       <style>{`
@@ -70,15 +79,14 @@ function ServiceCard({
   service,
   onEnquire,
 }: {
-  service: { id: number; title: string; description: string; image: string };
+  service: Service;
   onEnquire: (s: string) => void;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-      {/* Image — exactly 165px tall as in reference */}
       <div className="svc-img" style={{ width: "100%", height: 165, overflow: "hidden", borderRadius: 8, marginBottom: 10, position: "relative", background: "#f5f5f5" }}>
         <Image
-          src={service.image}
+          src={service.image_url}
           alt={service.title}
           fill
           sizes="(max-width: 768px) 50vw, 20vw"

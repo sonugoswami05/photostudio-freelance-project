@@ -15,7 +15,7 @@ export default function AboutUs() {
   }, []);
 
   return (
-    <section id="about" style={{ padding: "45px 0", background: "#fff", borderTop: "1px solid #f0f0f0" }}>
+    <section id="about" className="section-about" style={{ padding: "45px 0" }}>
       <div className="wrap">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
           <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 10, overflow: "hidden", background: "#f0f0f0" }}>
