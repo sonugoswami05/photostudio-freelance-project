@@ -79,9 +79,19 @@ export default function FloatingContact() {
                 −
               </button>
             </div>
-            <p style={{ fontSize: 12, color: "#555", marginBottom: 10 }}>+91-9925305809</p>
+            <a href="tel:+919974057620" style={{ fontSize: 12, color: "#555", marginBottom: 10, display: "block", textDecoration: "none" }}>+91 9974057620</a>
             <p style={{ fontSize: 14, fontWeight: 700, color: "#2d2d2d", marginBottom: 4 }}>Mail Us</p>
-            <p style={{ fontSize: 12, color: "#555", wordBreak: "break-all" }}>info@mdstudio.in</p>
+            <a href="mailto:jmodi1040@gmail.com" style={{ fontSize: 12, color: "#555", wordBreak: "break-all", textDecoration: "none" }}>jmodi1040@gmail.com</a>
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <a href="https://wa.me/919974057620" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, background: "#25D366", color: "#fff", padding: "3px 8px", borderRadius: 4, textDecoration: "none", fontWeight: 600 }}>
+                WhatsApp
+              </a>
+              <a href="https://www.instagram.com/jaimin_modi_photography/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, background: "#E1306C", color: "#fff", padding: "3px 8px", borderRadius: 4, textDecoration: "none", fontWeight: 600 }}>
+                Instagram
+              </a>
+            </div>
           </div>
         </div>
       )}

@@ -80,7 +80,7 @@ export default function SignUpModal() {
             width: 110, height: 110, borderRadius: "50%", background: "#F5C4AC",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 28, fontWeight: 700, color: "#444", marginBottom: 28,
-          }}>MD</div>
+          }}>NA</div>
           <h2 style={{ fontSize: 26, fontWeight: 500, color: "#222", margin: "0 0 14px" }}>Sign Up</h2>
           <div style={{ width: "100%", height: 1, background: "#e0e0e0", marginBottom: 16 }} />
           <p style={{ fontSize: 14, color: "#777", lineHeight: 1.6, margin: 0 }}>

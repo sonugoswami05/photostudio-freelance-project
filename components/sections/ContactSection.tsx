@@ -4,10 +4,10 @@ import { useState } from "react";
 import { MapPin, MessageSquare, Phone, Clock } from "lucide-react";
 
 const infoCards = [
-  { icon: MapPin,        title: "Our Office Address", value: "15, First Floor Mahatma Gandhi Shopping Centre, Kadi, Gujarat 384440" },
-  { icon: MessageSquare, title: "General Enquiries",  value: "info@mdstudio.in" },
-  { icon: Phone,         title: "Call Us",            value: "+91-9925305809" },
-  { icon: Clock,         title: "Our Timings",        value: "Mon - Sun : Open 24 hrs" },
+  { icon: MapPin,        title: "Our Address", value: "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd, Near Krishna Hospital, Kadi, Gujarat 382715" },
+  { icon: MessageSquare, title: "Email Us",    value: "jmodi1040@gmail.com" },
+  { icon: Phone,         title: "Call Us",     value: "+91 9974057620" },
+  { icon: Clock,         title: "Our Timings", value: "Mon - Sun : Open 24 hrs" },
 ];
 
 export default function ContactSection() {
@@ -110,7 +110,7 @@ export default function ContactSection() {
         {/* Map */}
         <div style={{ marginTop: 32, borderRadius: 12, overflow: "hidden", border: "1px solid #eee", height: 300, position: "relative" }}>
           <a
-            href="https://maps.google.com?q=Kadi,Gujarat,India"
+            href="https://maps.google.com?q=New+Alankar+Studio,Kadi,Gujarat,India"
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -134,7 +134,7 @@ export default function ContactSection() {
             height="100%"
             style={{ border: 0 }}
             loading="lazy"
-            title="MD Studio Location - Kadi"
+            title="New Alankar Studio Location - Kadi"
           />
         </div>
       </div>

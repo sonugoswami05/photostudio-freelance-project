@@ -14,16 +14,16 @@ export default function TopBar() {
         {/* Left */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 4, fontWeight: 700, color: "#333", border: "1px solid #ccc", padding: "1px 6px", borderRadius: 3, fontSize: 11 }}>
-            MD
+            NA
           </span>
           <a
-            href="tel:+919925305809"
+            href="tel:+919974057620"
             style={{ display: "flex", alignItems: "center", gap: 5, color: "#555", textDecoration: "none" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "#E8906D")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
           >
             <Phone size={11} />
-            +91-9925305809
+            +91 9974057620
           </a>
         </div>
 
@@ -33,6 +33,7 @@ export default function TopBar() {
             <MapPin size={11} color="#E8906D" />
             Kadi, Gujarat
           </span>
+
 
           {user ? (
             /* Logged-in state */

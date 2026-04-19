@@ -3,17 +3,18 @@
 import { useState, useEffect } from "react";
 import { Menu, X, User } from "lucide-react";
 import { useModal } from "@/contexts/ModalContext";
+import { supabase } from "@/lib/supabase";
+import Image from "next/image";
 
 const leftLinks = [
   { href: "#home", label: "HOME" },
+  { href: "#gallery", label: "PORTFOLIO" },
   { href: "#services", label: "SERVICES" },
-  { href: "#about", label: "ABOUT US" },
-  { href: "#why-us", label: "WHY US" },
+  { href: "#testimonials", label: "TESTIMONIALS" },
 ];
 
 const rightLinks = [
-  { href: "#gallery", label: "GALLERY" },
-  { href: "#testimonials", label: "TESTIMONIALS" },
+  { href: "#about", label: "ABOUT US" },
   { href: "#contact", label: "CONTACT US" },
 ];
 
@@ -21,6 +22,12 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { openLogin, user, logout } = useModal();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from("site_config").select("value").eq("key", "logo").single()
+      .then(({ data }) => { if (data?.value) setLogoUrl(data.value); });
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -107,25 +114,18 @@ export default function Navbar() {
               flexShrink: 0,
             }}
           >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 8,
-                background: "#E8906D",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: 15,
-                letterSpacing: "0.05em",
-              }}
-            >
-              MD
-            </div>
+            {logoUrl ? (
+              <Image src={logoUrl} alt="New Alankar Studio" width={48} height={48}
+                style={{ borderRadius: 8, objectFit: "contain" }} unoptimized />
+            ) : (
+              <div style={{
+                width: 48, height: 48, borderRadius: 8, background: "#E8906D",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#fff", fontWeight: 700, fontSize: 15, letterSpacing: "0.05em",
+              }}>NA</div>
+            )}
             <span style={{ fontSize: 13, fontWeight: 600, color: "#333", letterSpacing: "0.03em" }}>
-              MD Studio
+              New Alankar Studio
             </span>
           </button>
 
@@ -175,7 +175,7 @@ export default function Navbar() {
 
           {/* Studio name — centered */}
           <span style={{ flex: 1, textAlign: "center", fontSize: 16, fontWeight: 600, color: "#333", letterSpacing: "0.02em" }}>
-            MD Studio
+            New Alankar Studio
           </span>
 
           {/* User icon */}

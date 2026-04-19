@@ -65,11 +65,6 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  /* Why Us: single column */
-  #why-us .wrap > div:last-child {
-    grid-template-columns: 1fr !important;
-  }
-
   /* Testimonials: reduce padding */
   #testimonials > div {
     padding: 40px 0 36px !important;

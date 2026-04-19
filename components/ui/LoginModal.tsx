@@ -88,7 +88,7 @@ export default function LoginModal() {
             width: 110, height: 110, borderRadius: "50%", background: "#F5C4AC",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 28, fontWeight: 700, color: "#444", marginBottom: 28,
-          }}>MD</div>
+          }}>NA</div>
           <h2 style={{ fontSize: 26, fontWeight: 500, color: "#222", margin: "0 0 14px" }}>
             {view === "login" ? "Log In" : "Reset Password"}
           </h2>

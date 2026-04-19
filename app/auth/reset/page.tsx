@@ -55,8 +55,8 @@ export default function ResetPasswordPage() {
             width: 56, height: 56, borderRadius: 10, background: "#E8906D",
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 10,
-          }}>MD</div>
-          <p style={{ fontSize: 13, color: "#888", margin: 0 }}>MD Studio</p>
+          }}>NA</div>
+          <p style={{ fontSize: 13, color: "#888", margin: 0 }}>New Alankar Studio</p>
         </div>
 
         {done ? (

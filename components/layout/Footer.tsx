@@ -3,7 +3,7 @@
 const usefulLinks1 = [
   { label: "PRIVACY POLICY", href: "#" },
   { label: "SERVICES",       href: "#services" },
-  { label: "WHY US",         href: "#why-us" },
+  { label: "PORTFOLIO",      href: "#gallery" },
   { label: "TESTIMONIALS",   href: "#testimonials" },
 ];
 
@@ -71,10 +71,18 @@ export default function Footer() {
               Contact
             </h4>
             <p style={{ fontSize: 13, color: "#555", lineHeight: 1.65, marginBottom: 10 }}>
-              15, First Floor Mahatma Gandhi Shopping Centre,
-              Kadi, Gujarat 384440
+              Shefali Compound Near Shefali Cinema,<br />
+              Kadi - Detroj Rd, Near Krishna Hospital,<br />
+              Kadi, Gujarat 382715
             </p>
-            <p style={{ fontSize: 13, color: "#555" }}>+91-9925305809</p>
+            <a href="tel:+919974057620" style={{ fontSize: 13, color: "#555", textDecoration: "none", display: "block", marginBottom: 4 }}>+91 9974057620</a>
+            <a href="mailto:jmodi1040@gmail.com" style={{ fontSize: 13, color: "#555", textDecoration: "none", display: "block", marginBottom: 10 }}>jmodi1040@gmail.com</a>
+            <div style={{ display: "flex", gap: 8 }}>
+              <a href="https://wa.me/919974057620" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, background: "#25D366", color: "#fff", padding: "4px 10px", borderRadius: 4, textDecoration: "none", fontWeight: 600 }}>WhatsApp</a>
+              <a href="https://www.instagram.com/jaimin_modi_photography/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, background: "#E1306C", color: "#fff", padding: "4px 10px", borderRadius: 4, textDecoration: "none", fontWeight: 600 }}>Instagram</a>
+            </div>
           </div>
 
           {/* Col 3 — Connect */}
@@ -144,7 +152,7 @@ export default function Footer() {
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}
         >
           <p style={{ fontSize: 12, color: "#888", margin: 0 }}>
-            © Copyrights 2026 - 2027. MD Studio. All Rights Reserved.
+            © Copyrights 2026 - 2027. New Alankar Studio. All Rights Reserved.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#222", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 10, fontStyle: "italic" }}>

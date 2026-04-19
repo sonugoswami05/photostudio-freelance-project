@@ -24,10 +24,10 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MD Studio — Photography & Services",
+  title: "New Alankar Studio Photography",
   description:
-    "MD Studio, Rajmahel Road, Mehsana — premier photography studio offering candid wedding, model photography, video services, and more.",
-  keywords: ["MD Studio", "photography studio", "Mehsana", "wedding photographer", "candid photography"],
+    "New Alankar Studio, Kadi, Gujarat — premier photography studio offering candid wedding, model photography, video services, and more.",
+  keywords: ["New Alankar Studio", "photography studio", "Kadi", "Gujarat", "wedding photographer", "candid photography", "Jaimin Modi"],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
