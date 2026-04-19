@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --accent: #E8906D;
+  --accent-light: #F5C4AC;
+  --accent-bg: #FEF0EA;
+  --text-dark: #2d2d2d;
+  --text-gray: #666666;
+  --border: #e5e5e5;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: #ffffff;
+  --color-foreground: var(--text-dark);
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #F5C4AC;
+  color: #2d2d2d;
+}
+
+/* Centered container — matches reference site: max-width 1366px, padding 0 25px */
+.wrap {
+  width: 100%;
+  max-width: 1366px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 25px;
+  padding-right: 25px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .wrap {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+
+/* ── Mobile global fixes ── */
+@media (max-width: 767px) {
+  /* Hide top bar on mobile */
+  .topbar-wrap { display: none !important; }
+  /* About Us: stack image above text */
+  #about .wrap > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Why Us: single column */
+  #why-us .wrap > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Testimonials: reduce padding */
+  #testimonials > div {
+    padding: 40px 0 36px !important;
+  }
+
+  /* Footer copyright bar: center both rows */
+  footer .wrap > p,
+  footer .wrap > div {
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* Touch — eliminates 300ms delay and tap highlight on mobile */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Thin scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #E8906D;
+  border-radius: 4px;
 }

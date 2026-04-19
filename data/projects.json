@@ -1,0 +1,116 @@
+[
+  {
+    "id": 1,
+    "slug": "luminary-editorial",
+    "title": "Luminary Editorial",
+    "category": "editorial",
+    "tags": ["Fashion", "Editorial", "Studio"],
+    "year": "2024",
+    "client": "Vogue Italia",
+    "description": "A high-fashion editorial shoot exploring the interplay of light and shadow through dramatic studio lighting. Each frame captures the essence of contemporary couture against minimalist backdrops.",
+    "fullDescription": "This editorial project for Vogue Italia redefined the boundaries of studio fashion photography. Working with a team of 12, we crafted a visual narrative that speaks to the modern woman — bold, unapologetic, luminous.\n\nThe series spans 40 final images selected from over 2,000 frames shot over three days. Every detail — from the diffused soft boxes to the precise color grading — was deliberate.",
+    "coverImage": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&q=85",
+    "images": [
+      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&q=85",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=85",
+      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&q=85",
+      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=1200&q=85"
+    ],
+    "featured": true
+  },
+  {
+    "id": 2,
+    "slug": "solstice-portraits",
+    "title": "Solstice Portraits",
+    "category": "portrait",
+    "tags": ["Portrait", "Natural Light", "Fine Art"],
+    "year": "2024",
+    "client": "Private Commission",
+    "description": "A fine art portrait series harnessing the golden hour's fleeting warmth. Shot on medium format, these portraits reveal intimate human moments suspended in time.",
+    "fullDescription": "Solstice Portraits is a deeply personal body of work exploring vulnerability and strength through portraiture. Shot across three locations during the summer solstice, each subject was invited to inhabit their own silence.\n\nUsing a Hasselblad 907X with natural light exclusively, the series achieves a painterly quality that digital rarely touches.",
+    "coverImage": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=85",
+    "images": [
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=85",
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=1200&q=85",
+      "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=1200&q=85",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=85"
+    ],
+    "featured": true
+  },
+  {
+    "id": 3,
+    "slug": "obsidian-architecture",
+    "title": "Obsidian Architecture",
+    "category": "architecture",
+    "tags": ["Architecture", "Interior", "Luxury"],
+    "year": "2024",
+    "client": "Studio Perez Arquitectos",
+    "description": "Documenting the stark beauty of brutalist architecture reimagined through luxury materiality. Shot across Madrid and Barcelona, this series bridges art and commerce.",
+    "fullDescription": "Commissioned by Studio Perez Arquitectos to document their landmark residential project, this body of work transforms architectural photography into fine art.\n\nShot over five days across both cities, we worked with the natural light at precise hours to reveal the depth of raw concrete, polished marble, and curated voids.",
+    "coverImage": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=85",
+    "images": [
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=85",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=85",
+      "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=1200&q=85",
+      "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=1200&q=85"
+    ],
+    "featured": true
+  },
+  {
+    "id": 4,
+    "slug": "nocturn-series",
+    "title": "Nocturn Series",
+    "category": "editorial",
+    "tags": ["Night", "Editorial", "Conceptual"],
+    "year": "2023",
+    "client": "Self-Initiated",
+    "description": "An ongoing self-initiated project exploring nocturnal life in urban environments. Long exposures and deliberate movement blur the line between photography and painting.",
+    "fullDescription": "Nocturn began as a personal exploration of insomnia and evolved into a meditation on urban solitude. Shot across Tokyo, Milan, and New York over eighteen months.\n\nAll images are single exposures, no compositing — the streaks of light are real moments stretched across time.",
+    "coverImage": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=85",
+    "images": [
+      "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=85",
+      "https://images.unsplash.com/photo-1444723121867-7a241cacace9?w=1200&q=85",
+      "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=1200&q=85",
+      "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1200&q=85"
+    ],
+    "featured": false
+  },
+  {
+    "id": 5,
+    "slug": "terra-campaign",
+    "title": "Terra Campaign",
+    "category": "commercial",
+    "tags": ["Commercial", "Lifestyle", "Campaign"],
+    "year": "2023",
+    "client": "Terra Botanicals",
+    "description": "Brand campaign photography for Terra Botanicals' global relaunch. Earthy, tactile, and alive — every image anchors the brand's connection to nature.",
+    "fullDescription": "The Terra rebrand required imagery that felt lived-in but aspirational. We scouted locations across Tuscany and shot over eight days during harvest season.\n\nThe result: a library of 200+ hero images and lifestyle shots that anchored the brand's new visual identity across all touchpoints.",
+    "coverImage": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=85",
+    "images": [
+      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=85",
+      "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=85",
+      "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&q=85",
+      "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=1200&q=85"
+    ],
+    "featured": false
+  },
+  {
+    "id": 6,
+    "slug": "monolith-men",
+    "title": "Monolith Men",
+    "category": "portrait",
+    "tags": ["Portrait", "Men", "Studio"],
+    "year": "2023",
+    "client": "GQ Japan",
+    "description": "A series of stark, powerful portraits commissioned by GQ Japan. Hard light, minimal set dressing, and an unblinking intimacy define this collection.",
+    "fullDescription": "GQ Japan tasked us with creating a portfolio of portraits that felt genuinely timeless — images that could sit comfortably beside Avedon's work.\n\nWe stripped the studio back: one hard light source, seamless white, and a 100mm lens. Nothing to hide behind.",
+    "coverImage": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=1200&q=85",
+    "images": [
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=1200&q=85",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=1200&q=85",
+      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=1200&q=85",
+      "https://images.unsplash.com/photo-1463453091185-61582044d556?w=1200&q=85"
+    ],
+    "featured": false
+  }
+]

@@ -1,0 +1,7 @@
+[
+  { "id": "all", "label": "All Work" },
+  { "id": "editorial", "label": "Editorial" },
+  { "id": "portrait", "label": "Portrait" },
+  { "id": "architecture", "label": "Architecture" },
+  { "id": "commercial", "label": "Commercial" }
+]

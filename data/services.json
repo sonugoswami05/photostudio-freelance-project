@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "Candid Wedding Photographers",
+    "description": "Hire the best photographers who can sense the candidness of the wedding moment and click the best snap.",
+    "image": "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=400&q=80"
+  },
+  {
+    "id": 2,
+    "title": "Digital Photo Studios",
+    "description": "If you want your photos to breathe new life, rely on us. Our studio specializes in digital photo development.",
+    "image": "https://images.unsplash.com/photo-1502920514313-52581002a659?w=400&q=80"
+  },
+  {
+    "id": 3,
+    "title": "Model Photographers",
+    "description": "We click aesthetic photos of models to bring out their beautiful photogenic side at very reasonable prices.",
+    "image": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400&q=80"
+  },
+  {
+    "id": 4,
+    "title": "Photo Studios",
+    "description": "Looking for modeling portfolios and themed photo shoots? We have fully equipped photo studios for best clicks!",
+    "image": "https://images.unsplash.com/photo-1554080353-a576cf803bda?w=400&q=80"
+  },
+  {
+    "id": 5,
+    "title": "Photographers",
+    "description": "We have all types of photographer who can help you to develop your photographic knowledge and style.",
+    "image": "https://images.unsplash.com/photo-1500051638674-ff996a0ae29f?w=400&q=80"
+  },
+  {
+    "id": 6,
+    "title": "Photography & Services",
+    "description": "We are leading photographer. We offer all types of reliable services at a reasonable price.",
+    "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80"
+  },
+  {
+    "id": 7,
+    "title": "Video Editing Services",
+    "description": "With the help of advanced and innovative technology, we provide the best video editing services. Contact now!",
+    "image": "https://images.unsplash.com/photo-1536240478700-b869ad10e128?w=400&q=80"
+  },
+  {
+    "id": 8,
+    "title": "Video Shooting Services",
+    "description": "We provide video shoot services for your existing ideas or can create new customize script based on the goal.",
+    "image": "https://images.unsplash.com/photo-1601506521793-dc748fc80b67?w=400&q=80"
+  },
+  {
+    "id": 9,
+    "title": "Consultation",
+    "description": "Owing to our huge industrial knowledge and rich information, we are offering our customers with the best consultancy services. These services are available in varied provisions as per the detailed needs of our customers.",
+    "image": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&q=80"
+  },
+  {
+    "id": 10,
+    "title": "Installation",
+    "description": "To meet the growing requirement of our precious consumers, our firm offers Installation Services. This installation service is reliable and available for patrons in the simplest way. We apply minimal chargers for this service.",
+    "image": "https://images.unsplash.com/photo-1621905251189-08b45249ff40?w=400&q=80"
+  }
+]

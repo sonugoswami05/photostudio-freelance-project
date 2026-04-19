@@ -1,0 +1,20 @@
+[
+  { "id": 1, "src": "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80", "alt": "Wedding couple outdoor" },
+  { "id": 2, "src": "https://images.unsplash.com/photo-1617503305610-a5b8011d4c0f?w=600&q=80", "alt": "Bridal portrait" },
+  { "id": 3, "src": "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80", "alt": "Wedding ceremony" },
+  { "id": 4, "src": "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80", "alt": "Candid couple" },
+  { "id": 5, "src": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80", "alt": "Wedding silhouette" },
+  { "id": 6, "src": "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=600&q=80", "alt": "Reception" },
+  { "id": 7, "src": "https://images.unsplash.com/photo-1529636798458-92182e662485?w=600&q=80", "alt": "Bride closeup" },
+  { "id": 8, "src": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80", "alt": "Groom portrait" },
+  { "id": 9, "src": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80", "alt": "Portrait" },
+  { "id": 10, "src": "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=600&q=80", "alt": "Outdoor ceremony" },
+  { "id": 11, "src": "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=600&q=80", "alt": "Wedding decorations" },
+  { "id": 12, "src": "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=600&q=80", "alt": "Evening reception" },
+  { "id": 13, "src": "https://images.unsplash.com/photo-1520854221256-17451cc331bf?w=600&q=80", "alt": "Couple dance" },
+  { "id": 14, "src": "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600&q=80", "alt": "Wedding rings" },
+  { "id": 15, "src": "https://images.unsplash.com/photo-1525772764200-be829a350797?w=600&q=80", "alt": "Wedding venue" },
+  { "id": 16, "src": "https://images.unsplash.com/photo-1596475543955-4f5e4a09c2a8?w=600&q=80", "alt": "Studio portrait" },
+  { "id": 17, "src": "https://images.unsplash.com/photo-1504703395950-b89145a5425b?w=600&q=80", "alt": "Pre-wedding" },
+  { "id": 18, "src": "https://images.unsplash.com/photo-1492633423870-43d1cd2775eb?w=600&q=80", "alt": "Candid moment" }
+]
