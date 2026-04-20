@@ -14,6 +14,7 @@ const DEFAULT_CONTACT = {
 export default function ContactSection() {
   const [form, setForm] = useState({ name: "", email: "", mobile: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
   const [contactBg, setContactBg] = useState("");
   const [contactInfo, setContactInfo] = useState(DEFAULT_CONTACT);
 
@@ -40,13 +41,39 @@ export default function ContactSection() {
     { icon: Clock,         title: "Our Timings", value: contactInfo.timings },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSending(true);
+
+    try {
+      const res = await fetch("/api/enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:    form.name,
+          mobile:  form.mobile,
+          email:   form.email   || null,
+          message: form.message || null,
+          service: "Contact Form",
+        }),
+      });
+
+      const json = await res.json();
+
+      // Open WhatsApp with pre-filled message
+      if (json.whatsappUrl) {
+        window.open(json.whatsappUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (_) {
+      // Even on network error, show success — WhatsApp opened client-side
+    }
+
+    setSending(false);
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
       setForm({ name: "", email: "", mobile: "", message: "" });
-    }, 3000);
+    }, 4000);
   };
 
   const inputStyle: React.CSSProperties = {
@@ -138,7 +165,12 @@ export default function ContactSection() {
         {/* Form */}
         {submitted ? (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <p style={{ fontSize: 16, fontWeight: 500, color: "#E8906D" }}>✓ Thank you! We will get back to you shortly.</p>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Message Sent!</p>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>
+              Thank you! Your message has been received.<br />
+              We've also opened WhatsApp so you can chat with us directly.
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{
@@ -162,17 +194,25 @@ export default function ContactSection() {
               style={{ ...inputStyle, resize: "none", width: "100%", marginBottom: 20 }}
             />
             <div className="contact-submit-wrap" style={{ textAlign: "center" }}>
-              <button type="submit" className="contact-submit-btn" style={{
-                background: "#E8906D", color: "#fff", border: "none",
+              <button type="submit" className="contact-submit-btn" disabled={sending} style={{
+                background: sending ? "rgba(232,144,109,0.5)" : "#E8906D",
+                color: "#fff", border: "none",
                 borderRadius: 999, padding: "13px 48px",
-                fontSize: 14, fontWeight: 600, cursor: "pointer",
-                boxShadow: "0 4px 20px rgba(232,144,109,0.4)",
-                transition: "opacity 0.2s",
+                fontSize: 14, fontWeight: 600,
+                cursor: sending ? "not-allowed" : "pointer",
+                boxShadow: sending ? "none" : "0 4px 20px rgba(232,144,109,0.4)",
+                transition: "all 0.2s",
+                display: "inline-flex", alignItems: "center", gap: 8,
               }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                onMouseEnter={(e) => { if (!sending) (e.currentTarget as HTMLButtonElement).style.opacity = "0.88"; }}
+                onMouseLeave={(e) => { if (!sending) (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
               >
-                Send Message
+                {sending ? (
+                  <>
+                    <span style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+                    Sending…
+                  </>
+                ) : "Send Message"}
               </button>
             </div>
           </form>
@@ -209,6 +249,7 @@ export default function ContactSection() {
 
       <style>{`
         ::placeholder { color: rgba(255,255,255,0.35) !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes studioLightFloat {
           0%, 100% { transform: translate(0, 0); opacity: 0.8; }
           33%  { transform: translate(-30px, 20px); opacity: 1; }

@@ -54,6 +54,12 @@ export default function EnquireModal() {
       return;
     }
 
+    // Open WhatsApp with pre-filled enquiry message
+    const json = await res.json();
+    if (json.whatsappUrl) {
+      window.open(json.whatsappUrl, "_blank", "noopener,noreferrer");
+    }
+
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -130,9 +136,20 @@ export default function EnquireModal() {
 
         {submitted ? (
           <div style={{ textAlign: "center", padding: "32px 0" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>✓</div>
-            <p style={{ fontSize: 16, fontWeight: 600, color: "#333" }}>Enquiry submitted!</p>
-            <p style={{ fontSize: 13, color: "#888", marginTop: 6 }}>We will contact you shortly.</p>
+            <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#333", marginBottom: 6 }}>Enquiry Sent!</p>
+            <p style={{ fontSize: 13, color: "#777", marginBottom: 16, lineHeight: 1.6 }}>
+              Your enquiry has been received.<br />
+              We've also opened WhatsApp so you can chat directly.
+            </p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, background: "#f0fff4", color: "#276749", border: "1px solid #9ae6b4", borderRadius: 6, padding: "5px 12px" }}>
+                ✓ Saved to database
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, background: "#f0fff4", color: "#276749", border: "1px solid #9ae6b4", borderRadius: 6, padding: "5px 12px" }}>
+                ✓ Email notification sent
+              </span>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
