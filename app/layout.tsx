@@ -26,10 +26,10 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "New Alankar Studio Photography",
+  title: "Jaimin Modi Photography",
   description:
-    "New Alankar Studio, Kadi, Gujarat — premier photography studio offering candid wedding, model photography, video services, and more.",
-  keywords: ["New Alankar Studio", "photography studio", "Kadi", "Gujarat", "wedding photographer", "candid photography", "Jaimin Modi"],
+    "Jaimin Modi Photography, Kadi, Gujarat — premier photography studio offering candid wedding, model photography, video services, and more.",
+  keywords: ["Jaimin Modi Photography", "photography studio", "Kadi", "Gujarat", "wedding photographer", "candid photography", "Jaimin Modi"],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

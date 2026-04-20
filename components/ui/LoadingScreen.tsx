@@ -46,13 +46,13 @@ export default function LoadingScreen() {
             <Image src={logoUrl} alt="Logo" width={52} height={52}
               style={{ objectFit: "contain", borderRadius: 6 }} unoptimized />
           ) : (
-            <span className="ls-monogram">NA</span>
+            <span className="ls-monogram">JM</span>
           )}
         </div>
       </div>
 
       {/* Studio name */}
-      <p className="ls-title">New Alankar Studio</p>
+      <p className="ls-title">Jaimin Modi Photography</p>
       <p className="ls-sub">Photography &amp; Studio</p>
 
       {/* Progress bar */}

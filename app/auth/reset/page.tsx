@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 10,
           }}>NA</div>
-          <p style={{ fontSize: 13, color: "#888", margin: 0 }}>New Alankar Studio</p>
+          <p style={{ fontSize: 13, color: "#888", margin: 0 }}>Jaimin Modi Photography</p>
         </div>
 
         {done ? (

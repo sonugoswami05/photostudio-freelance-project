@@ -42,7 +42,7 @@ export default function Hero() {
           <h1 className="hero-h1" style={{
             fontFamily: "var(--font-display)", fontSize: "clamp(28px, 5vw, 56px)",
             fontWeight: 700, fontStyle: "italic", color: "#222", lineHeight: 1.2, margin: "0 0 10px",
-          }}>New Alankar Studio</h1>
+          }}>Jaimin Modi Photography</h1>
           <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "#555", margin: "0 0 28px", letterSpacing: "0.04em" }}>
             the creator
           </p>

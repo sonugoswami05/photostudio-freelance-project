@@ -115,17 +115,17 @@ export default function Navbar() {
             }}
           >
             {logoUrl ? (
-              <Image src={logoUrl} alt="New Alankar Studio" width={48} height={48}
+              <Image src={logoUrl} alt="Jaimin Modi Photography" width={48} height={48}
                 style={{ borderRadius: 8, objectFit: "contain" }} unoptimized />
             ) : (
               <div style={{
                 width: 48, height: 48, borderRadius: 8, background: "#E8906D",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff", fontWeight: 700, fontSize: 15, letterSpacing: "0.05em",
-              }}>NA</div>
+              }}>JM</div>
             )}
             <span style={{ fontSize: 13, fontWeight: 600, color: "#333", letterSpacing: "0.03em" }}>
-              New Alankar Studio
+              Jaimin Modi Photography
             </span>
           </button>
 
@@ -182,10 +182,10 @@ export default function Navbar() {
               <Image src={logoUrl} alt="Logo" width={32} height={32}
                 style={{ borderRadius: 6, objectFit: "contain" }} unoptimized />
             ) : (
-              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#E8906D", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>NA</div>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#E8906D", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>JM</div>
             )}
             <span style={{ fontSize: 15, fontWeight: 600, color: "#333", letterSpacing: "0.02em" }}>
-              New Alankar Studio
+              Jaimin Modi Photography
             </span>
           </button>
 

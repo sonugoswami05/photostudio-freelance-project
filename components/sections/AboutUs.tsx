@@ -19,7 +19,7 @@ export default function AboutUs() {
       <div className="wrap">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
           <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 10, overflow: "hidden", background: "#f0f0f0" }}>
-            <Image src={aboutImg} alt="About New Alankar Studio" fill sizes="50vw"
+            <Image src={aboutImg} alt="About Jaimin Modi Photography" fill sizes="50vw"
               style={{ objectFit: "cover" }} loading="lazy" unoptimized />
           </div>
           <div className="about-text">
@@ -28,7 +28,7 @@ export default function AboutUs() {
               fontWeight: 300, color: "#444", marginBottom: 20,
             }}>About Us</h2>
             <p style={{ fontSize: 15, color: "#555", lineHeight: 1.75 }}>
-              We, New Alankar Studio, situated at Kadi, Gujarat are one of the leading
+              We, Jaimin Modi Photography, situated at Kadi, Gujarat are one of the leading
               firm in the country, set up to cater to the growing requirements
               in all sectors. We have strengthened the business of our customers
               through proactive product development, timely delivery and superior

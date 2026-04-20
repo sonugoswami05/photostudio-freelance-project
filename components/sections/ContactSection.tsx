@@ -183,7 +183,7 @@ export default function ContactSection() {
             src="https://www.openstreetmap.org/export/embed.html?bbox=72.95%2C23.28%2C72.99%2C23.32&layer=mapnik&marker=23.30%2C72.97"
             width="100%" height="100%"
             style={{ border: 0 }} loading="lazy"
-            title="New Alankar Studio Location - Kadi"
+            title="Jaimin Modi Photography Location - Kadi"
           />
         </div>
       </div>

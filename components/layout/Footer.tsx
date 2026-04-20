@@ -155,7 +155,7 @@ export default function Footer() {
           style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}
         >
           <p style={{ fontSize: 12, color: "#888", margin: 0 }}>
-            © 2026 – 2027 New Alankar Studio. All Rights Reserved.
+            © 2026 – 2027 Jaimin Modi Photography. All Rights Reserved.
           </p>
           <p style={{ fontSize: 12, color: "#bbb", margin: 0, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             Crafted with ♥ by&nbsp;
