@@ -18,7 +18,7 @@ export default function Services() {
 
   useEffect(() => {
     supabase.from("services").select("*").order("sort_order", { ascending: true })
-      .then(({ data }) => { if (data && data.length > 0) setServices(data); });
+      .then(({ data, error }) => { if (!error && data && data.length > 0) setServices(data); });
   }, []);
 
   const chunkSize = 5;

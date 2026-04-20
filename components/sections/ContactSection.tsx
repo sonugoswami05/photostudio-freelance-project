@@ -17,7 +17,7 @@ export default function ContactSection() {
   const [contactBg, setContactBg] = useState("");
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "contact_bg").single()
+    supabase.from("site_config").select("value").eq("key", "contact_bg").maybeSingle()
       .then(({ data }) => { if (data?.value) setContactBg(data.value); });
   }, []);
 

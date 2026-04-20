@@ -14,7 +14,7 @@ export default function Hero() {
   const [heroMedia, setHeroMedia] = useState(DEFAULT);
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "hero_image").single()
+    supabase.from("site_config").select("value").eq("key", "hero_image").maybeSingle()
       .then(({ data }) => { if (data?.value) setHeroMedia(data.value); });
   }, []);
 

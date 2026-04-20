@@ -25,7 +25,7 @@ export default function Navbar() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "logo").single()
+    supabase.from("site_config").select("value").eq("key", "logo").maybeSingle()
       .then(({ data }) => { if (data?.value) setLogoUrl(data.value); });
   }, []);
 

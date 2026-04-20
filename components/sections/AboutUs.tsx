@@ -10,7 +10,7 @@ export default function AboutUs() {
   const [aboutImg, setAboutImg] = useState(DEFAULT);
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "about_image").single()
+    supabase.from("site_config").select("value").eq("key", "about_image").maybeSingle()
       .then(({ data }) => { if (data?.value) setAboutImg(data.value); });
   }, []);
 
