@@ -26,7 +26,7 @@ export default function Services() {
   for (let i = 0; i < services.length; i += chunkSize) rows.push(services.slice(i, i + chunkSize));
 
   return (
-    <section id="services" className="section-services" style={{ padding: "45px 0" }}>
+    <section id="services" className="section-services" aria-label="Photography Services offered by Jaimin Modi Photography in Kadi, Gujarat" style={{ padding: "45px 0" }}>
       <div className="wrap">
         <h2
           style={{
@@ -38,7 +38,7 @@ export default function Services() {
             marginBottom: 32,
           }}
         >
-          We Offer
+          Photography Services in Kadi, Gujarat
         </h2>
 
         {rows.map((row, ri) => (

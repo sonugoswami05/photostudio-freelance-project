@@ -6,6 +6,13 @@ import { supabase } from "@/lib/supabase";
 
 const DEFAULT = "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80";
 
+const highlights = [
+  { number: "500+", label: "Weddings Photographed" },
+  { number: "8+",   label: "Years of Experience" },
+  { number: "15+",  label: "Services Offered" },
+  { number: "100%", label: "Client Satisfaction" },
+];
+
 export default function AboutUs() {
   const [aboutImg, setAboutImg] = useState(DEFAULT);
 
@@ -15,34 +22,90 @@ export default function AboutUs() {
   }, []);
 
   return (
-    <section id="about" className="section-about" style={{ padding: "45px 0" }}>
+    <section
+      id="about"
+      className="section-about"
+      aria-label="About Jaimin Modi Photography"
+      style={{ padding: "60px 0" }}
+      itemScope
+      itemType="https://schema.org/AboutPage"
+    >
       <div className="wrap">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
-          <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 10, overflow: "hidden", background: "#f0f0f0" }}>
-            <Image src={aboutImg} alt="About Jaimin Modi Photography" fill sizes="50vw"
-              style={{ objectFit: "cover" }} loading="lazy" unoptimized />
+        <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+
+          {/* Image */}
+          <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#f0f0f0", boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+            <Image
+              src={aboutImg}
+              alt="Jaimin Modi Photography studio — professional photographer in Kadi, Gujarat"
+              fill
+              sizes="(max-width: 767px) 100vw, 50vw"
+              style={{ objectFit: "cover" }}
+              loading="lazy"
+              unoptimized
+            />
           </div>
-          <div className="about-text">
-            <h2 style={{
-              fontFamily: "var(--font-display)", fontSize: "clamp(24px, 2.5vw, 36px)",
-              fontWeight: 300, color: "#444", marginBottom: 20,
-            }}>About Us</h2>
-            <p style={{ fontSize: 15, color: "#555", lineHeight: 1.75 }}>
-              We, Jaimin Modi Photography, situated at Kadi, Gujarat are one of the leading
-              firm in the country, set up to cater to the growing requirements
-              in all sectors. We have strengthened the business of our customers
-              through proactive product development, timely delivery and superior
-              product attributes by reinforcing innovation, cost leadership and
-              premium quality.
+
+          {/* Text */}
+          <div className="about-text" itemProp="description">
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(24px, 2.5vw, 38px)",
+                fontWeight: 300, color: "#444",
+                marginBottom: 16,
+              }}
+            >
+              About Jaimin Modi Photography
+            </h2>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#E8906D", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>
+              Wedding &amp; Candid Photographer · Kadi, Gujarat
             </p>
+
+            <p style={{ fontSize: 15, color: "#555", lineHeight: 1.85, marginBottom: 16 }}>
+              Welcome to <strong>Jaimin Modi Photography</strong> — one of the most trusted photography studios in <strong>Kadi, Mehsana, Gujarat</strong>. We specialise in capturing life's most precious moments through authentic, artistic, and emotionally rich imagery.
+            </p>
+
+            <p style={{ fontSize: 15, color: "#555", lineHeight: 1.85, marginBottom: 24 }}>
+              From <strong>candid wedding photography</strong> and <strong>pre-wedding shoots</strong> to <strong>model portfolios</strong>, <strong>baby photography</strong>, and <strong>cinematic video</strong> — our studio brings creativity and passion to every frame. With years of experience serving clients across <strong>Kadi, Mehsana, Ahmedabad</strong>, and all of <strong>Gujarat</strong>, we understand how to tell your story beautifully.
+            </p>
+
+            {/* Stats */}
+            <div className="about-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+              {highlights.map((h) => (
+                <div key={h.label} style={{ textAlign: "center", padding: "14px 8px", background: "#fef8f5", borderRadius: 10, border: "1px solid rgba(232,144,109,0.15)" }}>
+                  <p style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 800, color: "#E8906D", margin: "0 0 4px", fontFamily: "var(--font-display)" }}>{h.number}</p>
+                  <p style={{ fontSize: 11, color: "#777", margin: 0, letterSpacing: "0.04em", lineHeight: 1.3 }}>{h.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="#contact"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "#A0845C", color: "#fff", textDecoration: "none",
+                borderRadius: 999, padding: "12px 28px",
+                fontSize: 14, fontWeight: 600, letterSpacing: "0.02em",
+                boxShadow: "0 2px 8px rgba(160,132,92,0.4)",
+                transition: "opacity 0.2s",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.85")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")}
+            >
+              Book a Session
+            </a>
           </div>
         </div>
       </div>
+
       <style>{`
         @media (max-width: 767px) {
-          #about .wrap > div { grid-template-columns: 1fr !important; }
-          #about .about-text { text-align: center !important; }
-          #about .about-text h2 { text-align: center !important; }
+          .about-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .about-text  { text-align: center !important; }
+          .about-text h2 { text-align: center !important; }
+          .about-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .about-text a { margin: 0 auto; }
         }
       `}</style>
     </section>

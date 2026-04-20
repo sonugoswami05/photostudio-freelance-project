@@ -35,7 +35,7 @@ export default function Gallery() {
   const visible = images.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   return (
-    <section id="gallery" className="section-gallery" style={{ padding: "45px 0" }}>
+    <section id="gallery" className="section-gallery" aria-label="Photography Portfolio – Jaimin Modi Photography, Kadi Gujarat" style={{ padding: "45px 0" }}>
       <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
         <h2 style={{
           fontFamily: "var(--font-display)",

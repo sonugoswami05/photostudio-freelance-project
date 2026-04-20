@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Open_Sans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -13,6 +13,8 @@ import EnquireModal from "@/components/ui/EnquireModal";
 import ProfileModal from "@/components/ui/ProfileModal";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaiminmodiphotography.com";
+
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-display",
@@ -25,16 +27,128 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#E8906D",
+};
+
 export const metadata: Metadata = {
-  title: "Jaimin Modi Photography",
+  metadataBase: new URL(SITE_URL),
+
+  title: {
+    default: "Jaimin Modi Photography | Best Wedding & Candid Photographer in Kadi, Gujarat",
+    template: "%s | Jaimin Modi Photography – Kadi, Gujarat",
+  },
+
   description:
-    "Jaimin Modi Photography, Kadi, Gujarat — premier photography studio offering candid wedding, model photography, video services, and more.",
-  keywords: ["Jaimin Modi Photography", "photography studio", "Kadi", "Gujarat", "wedding photographer", "candid photography", "Jaimin Modi"],
+    "Jaimin Modi Photography — professional wedding, candid, model & baby photographer in Kadi, Mehsana, Gujarat. Stunning portraits, pre-wedding shoots & video services. Book your session today!",
+
+  keywords: [
+    "Jaimin Modi Photography",
+    "wedding photographer Kadi",
+    "photographer in Kadi Gujarat",
+    "candid wedding photography Kadi",
+    "photography studio Kadi",
+    "pre-wedding shoot Kadi",
+    "model photography Gujarat",
+    "baby photography Kadi",
+    "wedding photographer Mehsana",
+    "best photographer Kadi",
+    "portrait photography Gujarat",
+    "studio photography Kadi",
+    "wedding photographer Gujarat",
+    "professional photographer Kadi",
+    "photography near Kadi",
+    "Jaimin Modi photographer",
+    "JM Photography Kadi",
+  ],
+
+  authors: [{ name: "Jaimin Modi Photography", url: SITE_URL }],
+  creator: "Jaimin Modi Photography",
+  publisher: "Jaimin Modi Photography",
+
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      "en-IN": SITE_URL,
+      "gu-IN": SITE_URL,
+      "hi-IN": SITE_URL,
+    },
+  },
+
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: SITE_URL,
+    siteName: "Jaimin Modi Photography",
+    title: "Jaimin Modi Photography | Best Wedding & Candid Photographer in Kadi, Gujarat",
+    description:
+      "Professional wedding, candid, model & baby photographer in Kadi, Mehsana, Gujarat. Book your perfect photography session with Jaimin Modi Photography.",
+    images: [
+      {
+        url: `${SITE_URL}/og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "Jaimin Modi Photography – Wedding & Studio Photographer in Kadi Gujarat",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Jaimin Modi Photography | Wedding & Candid Photographer – Kadi, Gujarat",
+    description:
+      "Professional wedding, candid, model & baby photographer in Kadi, Gujarat. Stunning photography sessions. Book today!",
+    images: [`${SITE_URL}/og-image.jpg`],
+    creator: "@jaiminmodiphoto",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+
+  category: "Photography",
+
+  other: {
+    // Geo tags for local SEO
+    "geo.region":      "IN-GJ",
+    "geo.placename":   "Kadi, Mehsana, Gujarat, India",
+    "geo.position":    "23.2978;72.9735",
+    "ICBM":            "23.2978, 72.9735",
+    // Business info
+    "business:contact_data:street_address": "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd",
+    "business:contact_data:locality":       "Kadi",
+    "business:contact_data:region":         "Gujarat",
+    "business:contact_data:postal_code":    "382715",
+    "business:contact_data:country_name":   "India",
+    "business:contact_data:phone_number":   "+91-9974057620",
+    "business:contact_data:email":          "jmodi1040@gmail.com",
+    "business:contact_data:website":        SITE_URL,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${playfair.variable} ${openSans.variable}`}>
+      <head>
+        {/* Preconnect for performance / SEO Core Web Vitals */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://translate.google.com" />
+        {/* Favicon */}
+        <link rel="icon"             href="/favicon.ico" sizes="any" />
+        <link rel="icon"             href="/icon.svg"    type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body style={{ fontFamily: "var(--font-body, Open Sans, sans-serif)" }}>
         <ModalProvider>
           <LoadingScreen />
@@ -48,6 +162,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <EnquireModal />
           <ProfileModal />
         </ModalProvider>
+
         {/* Hidden Google Translate element */}
         <div id="google_translate_element" style={{ display: "none" }} />
         <Script id="gt-init" strategy="afterInteractive">{`

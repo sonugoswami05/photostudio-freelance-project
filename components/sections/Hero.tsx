@@ -19,7 +19,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="home" style={{ position: "relative", width: "100%", minHeight: "58vh" }}>
+    <section id="home" aria-label="Jaimin Modi Photography – Wedding & Candid Photographer in Kadi, Gujarat" itemScope itemType="https://schema.org/WPHeader" style={{ position: "relative", width: "100%", minHeight: "58vh" }}>
       <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
         {isVideo(heroMedia) ? (
           <video
@@ -43,8 +43,11 @@ export default function Hero() {
             fontFamily: "var(--font-display)", fontSize: "clamp(28px, 5vw, 56px)",
             fontWeight: 700, fontStyle: "italic", color: "#222", lineHeight: 1.2, margin: "0 0 10px",
           }}>Jaimin Modi Photography</h1>
-          <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "#555", margin: "0 0 28px", letterSpacing: "0.04em" }}>
-            the creator
+          <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "#555", margin: "0 0 6px", letterSpacing: "0.04em" }}>
+            Wedding &amp; Candid Photographer
+          </p>
+          <p style={{ fontSize: "clamp(12px, 1.2vw, 14px)", color: "#777", margin: "0 0 28px", letterSpacing: "0.08em" }}>
+            Kadi · Mehsana · Gujarat
           </p>
           <button
             onClick={() => openEnquire()}
