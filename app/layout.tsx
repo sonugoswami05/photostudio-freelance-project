@@ -11,6 +11,7 @@ import LoginModal from "@/components/ui/LoginModal";
 import SignUpModal from "@/components/ui/SignUpModal";
 import EnquireModal from "@/components/ui/EnquireModal";
 import ProfileModal from "@/components/ui/ProfileModal";
+import LoadingScreen from "@/components/ui/LoadingScreen";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${playfair.variable} ${openSans.variable}`}>
       <body style={{ fontFamily: "var(--font-body, Open Sans, sans-serif)" }}>
         <ModalProvider>
+          <LoadingScreen />
           <TopBar />
           <Navbar />
           {children}
