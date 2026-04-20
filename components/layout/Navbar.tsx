@@ -173,10 +173,21 @@ export default function Navbar() {
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          {/* Studio name — centered */}
-          <span style={{ flex: 1, textAlign: "center", fontSize: 16, fontWeight: 600, color: "#333", letterSpacing: "0.02em" }}>
-            New Alankar Studio
-          </span>
+          {/* Logo + Studio name — centered */}
+          <button
+            onClick={() => handleNav("#home")}
+            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "none", border: "none", cursor: "pointer" }}
+          >
+            {logoUrl ? (
+              <Image src={logoUrl} alt="Logo" width={32} height={32}
+                style={{ borderRadius: 6, objectFit: "contain" }} unoptimized />
+            ) : (
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: "#E8906D", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>NA</div>
+            )}
+            <span style={{ fontSize: 15, fontWeight: 600, color: "#333", letterSpacing: "0.02em" }}>
+              New Alankar Studio
+            </span>
+          </button>
 
           {/* User icon */}
           <button
