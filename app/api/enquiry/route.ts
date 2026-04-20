@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import nodemailer from "nodemailer";
 
 // ── Config ───────────────────────────────────────────────────────────
-const STUDIO_EMAIL = process.env.GMAIL_USER || "jmodi1040@gmail.com";
+const STUDIO_EMAIL = process.env.NOTIFY_EMAIL || "8347goswamisonu@gmail.com";
 const STUDIO_PHONE = process.env.STUDIO_WHATSAPP || "919974057620";
 
 // ── Types ─────────────────────────────────────────────────────────────

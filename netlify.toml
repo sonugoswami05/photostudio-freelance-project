@@ -1,0 +1,13 @@
+# ── Netlify configuration for Next.js ──────────────────────────────
+
+[build]
+  command   = "npm run build"
+  publish   = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS    = "--legacy-peer-deps"
+
+# Next.js runtime plugin — handles SSR, API routes, image optimisation
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
