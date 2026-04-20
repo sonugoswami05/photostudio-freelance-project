@@ -4,22 +4,41 @@ import { useState, useEffect } from "react";
 import { MapPin, MessageSquare, Phone, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const infoCards = [
-  { icon: MapPin,        title: "Our Address", value: "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd, Near Krishna Hospital, Kadi, Gujarat 382715" },
-  { icon: MessageSquare, title: "Email Us",    value: "jmodi1040@gmail.com" },
-  { icon: Phone,         title: "Call Us",     value: "+91 9974057620" },
-  { icon: Clock,         title: "Our Timings", value: "Mon – Sun : Open 24 hrs" },
-];
+const DEFAULT_CONTACT = {
+  address: "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd, Near Krishna Hospital, Kadi, Gujarat 382715",
+  email:   "jmodi1040@gmail.com",
+  phone:   "+91 9974057620",
+  timings: "Mon – Sun : Open 24 hrs",
+};
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: "", email: "", mobile: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [contactBg, setContactBg] = useState("");
+  const [contactInfo, setContactInfo] = useState(DEFAULT_CONTACT);
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "contact_bg").maybeSingle()
-      .then(({ data }) => { if (data?.value) setContactBg(data.value); });
+    supabase.from("site_config").select("key, value")
+      .in("key", ["contact_bg", "contact_address", "contact_email", "contact_phone", "contact_timings"])
+      .then(({ data }) => {
+        if (!data) return;
+        const get = (k: string) => data.find((r) => r.key === k)?.value || "";
+        if (get("contact_bg"))      setContactBg(get("contact_bg"));
+        setContactInfo({
+          address: get("contact_address") || DEFAULT_CONTACT.address,
+          email:   get("contact_email")   || DEFAULT_CONTACT.email,
+          phone:   get("contact_phone")   || DEFAULT_CONTACT.phone,
+          timings: get("contact_timings") || DEFAULT_CONTACT.timings,
+        });
+      });
   }, []);
+
+  const infoCards = [
+    { icon: MapPin,        title: "Our Address", value: contactInfo.address },
+    { icon: MessageSquare, title: "Email Us",    value: contactInfo.email },
+    { icon: Phone,         title: "Call Us",     value: contactInfo.phone },
+    { icon: Clock,         title: "Our Timings", value: contactInfo.timings },
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +86,7 @@ export default function ContactSection() {
         </>
       )}
 
-      {/* Studio light orbs (shown even with photo for atmosphere) */}
+      {/* Studio light orbs */}
       <div style={{
         position: "absolute", width: 600, height: 600, borderRadius: "50%",
         background: "radial-gradient(circle, rgba(140,200,255,0.07) 0%, transparent 65%)",
@@ -162,7 +181,7 @@ export default function ContactSection() {
         {/* Map */}
         <div style={{ marginTop: 40, borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)", height: 300, position: "relative" }}>
           <a
-            href="https://maps.google.com?q=New+Alankar+Studio,Kadi,Gujarat,India"
+            href={`https://maps.google.com?q=${encodeURIComponent(contactInfo.address)}`}
             target="_blank" rel="noopener noreferrer"
             style={{
               position: "absolute", top: 12, left: 12, zIndex: 10,

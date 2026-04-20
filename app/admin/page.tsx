@@ -4,41 +4,63 @@ import { useState, useEffect, useRef } from "react";
 import { useModal } from "@/contexts/ModalContext";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { Trash2, Upload, LogOut, Pencil, X, Check, Plus } from "lucide-react";
+import { Trash2, Upload, LogOut, Pencil, X, Check, Plus, Phone, MapPin, Mail, Clock, ExternalLink } from "lucide-react";
 import servicesData from "@/data/services.json";
 
 interface GalleryImage { id: string; url: string; caption: string | null; category: string | null; }
 interface Service { id: string; title: string; description: string; image_url: string; sort_order: number; }
 
+const DEFAULT_CONTACT = {
+  address: "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd, Near Krishna Hospital, Kadi, Gujarat 382715",
+  email:   "jmodi1040@gmail.com",
+  phone:   "+91 9974057620",
+  timings: "Mon – Sun : Open 24 hrs",
+};
+
+// ── Shared dark-glass input style ──────────────────────────────────
+const darkInput: React.CSSProperties = {
+  width: "100%", boxSizing: "border-box",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  borderRadius: 8, padding: "10px 14px",
+  fontSize: 13, color: "#fff",
+  outline: "none", fontFamily: "inherit",
+  backdropFilter: "blur(4px)",
+  transition: "border-color 0.2s",
+};
+
 export default function AdminPage() {
   const { user, logout } = useModal();
 
   // gallery / config state
-  const [gallery, setGallery] = useState<GalleryImage[]>([]);
-  const [logoUrl, setLogoUrl] = useState("");
-  const [heroUrl, setHeroUrl] = useState("");
-  const [aboutUrl, setAboutUrl] = useState("");
-  const [uploading, setUploading] = useState<string | null>(null);
-  const [status, setStatus] = useState("");
-  const [authChecked, setAuthChecked] = useState(false);
+  const [gallery, setGallery]         = useState<GalleryImage[]>([]);
+  const [logoUrl, setLogoUrl]         = useState("");
+  const [heroUrl, setHeroUrl]         = useState("");
+  const [aboutUrl, setAboutUrl]       = useState("");
   const [contactBgUrl, setContactBgUrl] = useState("");
+  const [uploading, setUploading]     = useState<string | null>(null);
+  const [status, setStatus]           = useState("");
+  const [authChecked, setAuthChecked] = useState(false);
 
   // services state
-  const [services, setServices] = useState<Service[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "" });
-  const [addingService, setAddingService] = useState(false);
-  const [newSvc, setNewSvc] = useState({ title: "", description: "" });
+  const [services, setServices]               = useState<Service[]>([]);
+  const [editingId, setEditingId]             = useState<string | null>(null);
+  const [editForm, setEditForm]               = useState({ title: "", description: "" });
+  const [addingService, setAddingService]     = useState(false);
+  const [newSvc, setNewSvc]                   = useState({ title: "", description: "" });
   const [serviceTableMissing, setServiceTableMissing] = useState(false);
 
+  // contact info state
+  const [contactInfo, setContactInfo]   = useState(DEFAULT_CONTACT);
+  const [savingContact, setSavingContact] = useState(false);
+
   // refs
-  const galleryRef = useRef<HTMLInputElement>(null);
-  const logoRef = useRef<HTMLInputElement>(null);
-  const heroRef = useRef<HTMLInputElement>(null);
-  const aboutRef = useRef<HTMLInputElement>(null);
-  const contactBgRef = useRef<HTMLInputElement>(null);
-  const svcImgRef = useRef<HTMLInputElement>(null);
-  const newSvcImgRef = useRef<HTMLInputElement>(null);
+  const galleryRef    = useRef<HTMLInputElement>(null);
+  const logoRef       = useRef<HTMLInputElement>(null);
+  const heroRef       = useRef<HTMLInputElement>(null);
+  const aboutRef      = useRef<HTMLInputElement>(null);
+  const contactBgRef  = useRef<HTMLInputElement>(null);
+  const svcImgRef     = useRef<HTMLInputElement>(null);
   const [pendingSvcImgId, setPendingSvcImgId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,10 +81,17 @@ export default function AdminPage() {
 
     if (imgs) setGallery(imgs);
     if (cfg) {
-      setLogoUrl(cfg.find((r) => r.key === "logo")?.value || "");
-      setHeroUrl(cfg.find((r) => r.key === "hero_image")?.value || "");
-      setAboutUrl(cfg.find((r) => r.key === "about_image")?.value || "");
-      setContactBgUrl(cfg.find((r) => r.key === "contact_bg")?.value || "");
+      const get = (k: string) => cfg.find((r) => r.key === k)?.value || "";
+      setLogoUrl(get("logo"));
+      setHeroUrl(get("hero_image"));
+      setAboutUrl(get("about_image"));
+      setContactBgUrl(get("contact_bg"));
+      setContactInfo({
+        address: get("contact_address") || DEFAULT_CONTACT.address,
+        email:   get("contact_email")   || DEFAULT_CONTACT.email,
+        phone:   get("contact_phone")   || DEFAULT_CONTACT.phone,
+        timings: get("contact_timings") || DEFAULT_CONTACT.timings,
+      });
     }
     if (svcsErr) {
       setServiceTableMissing(true);
@@ -75,10 +104,7 @@ export default function AdminPage() {
 
   const seedServices = async () => {
     const rows = servicesData.map((s, i) => ({
-      title: s.title,
-      description: s.description,
-      image_url: s.image,
-      sort_order: i,
+      title: s.title, description: s.description, image_url: s.image, sort_order: i,
     }));
     const { data } = await supabase.from("services").insert(rows).select();
     if (data) setServices(data);
@@ -120,7 +146,7 @@ export default function AdminPage() {
     const url = await uploadFile(file, key);
     if (url) {
       await supabase.from("site_config").upsert({ key, value: url, updated_at: new Date().toISOString() });
-      if (key === "logo") setLogoUrl(url);
+      if (key === "logo")      setLogoUrl(url);
       if (key === "hero_image") setHeroUrl(url);
       if (key === "about_image") setAboutUrl(url);
       if (key === "contact_bg") setContactBgUrl(url);
@@ -129,25 +155,30 @@ export default function AdminPage() {
     setUploading(null);
   };
 
-  // ── Services ─────────────────────────────────────────
-  const startEdit = (svc: Service) => {
-    setEditingId(svc.id);
-    setEditForm({ title: svc.title, description: svc.description });
+  // ── Contact Info ──────────────────────────────────────
+  const saveContactInfo = async () => {
+    setSavingContact(true); setStatus("");
+    const rows = [
+      { key: "contact_address", value: contactInfo.address },
+      { key: "contact_email",   value: contactInfo.email },
+      { key: "contact_phone",   value: contactInfo.phone },
+      { key: "contact_timings", value: contactInfo.timings },
+    ];
+    await Promise.all(rows.map((r) =>
+      supabase.from("site_config").upsert({ ...r, updated_at: new Date().toISOString() })
+    ));
+    setSavingContact(false);
+    setStatus("✓ Contact info updated!");
   };
 
-  const cancelEdit = () => { setEditingId(null); };
+  // ── Services ─────────────────────────────────────────
+  const startEdit  = (svc: Service) => { setEditingId(svc.id); setEditForm({ title: svc.title, description: svc.description }); };
+  const cancelEdit = () => setEditingId(null);
 
   const saveEdit = async (id: string) => {
-    const { error } = await supabase.from("services")
-      .update({ title: editForm.title, description: editForm.description })
-      .eq("id", id);
-    if (!error) {
-      setServices((s) => s.map((sv) => sv.id === id ? { ...sv, ...editForm } : sv));
-      setEditingId(null);
-      setStatus("✓ Service updated.");
-    } else {
-      setStatus("Error: " + error.message);
-    }
+    const { error } = await supabase.from("services").update({ title: editForm.title, description: editForm.description }).eq("id", id);
+    if (!error) { setServices((s) => s.map((sv) => sv.id === id ? { ...sv, ...editForm } : sv)); setEditingId(null); setStatus("✓ Service updated."); }
+    else setStatus("Error: " + error.message);
   };
 
   const deleteService = async (id: string) => {
@@ -165,113 +196,108 @@ export default function AdminPage() {
       setServices((s) => s.map((sv) => sv.id === id ? { ...sv, image_url: url } : sv));
       setStatus("✓ Service image updated.");
     }
-    setUploading(null);
-    setPendingSvcImgId(null);
+    setUploading(null); setPendingSvcImgId(null);
   };
 
   const handleAddService = async (imageFile: File | null) => {
     if (!newSvc.title.trim()) { setStatus("Please enter a title."); return; }
     setUploading("new-svc"); setStatus("");
     let imageUrl = "";
-    if (imageFile) {
-      const url = await uploadFile(imageFile, "services");
-      if (url) imageUrl = url;
-    }
+    if (imageFile) { const url = await uploadFile(imageFile, "services"); if (url) imageUrl = url; }
     const { data, error } = await supabase.from("services").insert({
-      title: newSvc.title,
-      description: newSvc.description,
-      image_url: imageUrl,
-      sort_order: services.length,
+      title: newSvc.title, description: newSvc.description, image_url: imageUrl, sort_order: services.length,
     }).select().single();
-    if (data) {
-      setServices((s) => [...s, data]);
-      setNewSvc({ title: "", description: "" });
-      setAddingService(false);
-      setStatus("✓ New service added.");
-    } else {
-      setStatus("Error: " + error?.message);
-    }
+    if (data) { setServices((s) => [...s, data]); setNewSvc({ title: "", description: "" }); setAddingService(false); setStatus("✓ New service added."); }
+    else setStatus("Error: " + error?.message);
     setUploading(null);
   };
 
   // ── Auth guards ───────────────────────────────────────
-  if (!authChecked || (!user && !authChecked)) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fafafa" }}>
-      <div style={{ textAlign: "center", padding: 40 }}>
-        <div style={{ width: 40, height: 40, border: "3px solid #E8906D", borderTopColor: "transparent", borderRadius: "50%", margin: "0 auto 16px", animation: "spin 0.8s linear infinite" }} />
-        <p style={{ fontSize: 15, color: "#888" }}>Checking login…</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    </div>
-  );
-
-  if (!user) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fafafa" }}>
-      <div style={{ textAlign: "center", padding: 40 }}>
-        <p style={{ fontSize: 18, color: "#555", marginBottom: 16 }}>Please log in to access the admin panel.</p>
-        <a href="/" style={{ color: "#E8906D", fontWeight: 600 }}>← Go to website and log in</a>
-      </div>
-    </div>
-  );
-
+  if (!authChecked || (!user && !authChecked)) return <FullscreenState type="loading" />;
+  if (!user) return <FullscreenState type="no-user" />;
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-  if (ADMIN_EMAIL && user.email !== ADMIN_EMAIL) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fafafa" }}>
-      <div style={{ textAlign: "center", padding: 40, maxWidth: 400 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-        <p style={{ fontSize: 20, fontWeight: 700, color: "#333", marginBottom: 8 }}>Access Denied</p>
-        <p style={{ fontSize: 14, color: "#888", marginBottom: 24 }}>You do not have permission to access the admin panel. Please log in with the admin account.</p>
-        <a href="/" style={{ color: "#E8906D", fontWeight: 600, fontSize: 14 }}>← Go to website</a>
-      </div>
-    </div>
-  );
+  if (ADMIN_EMAIL && user.email !== ADMIN_EMAIL) return <FullscreenState type="denied" />;
 
   // ── Render ────────────────────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f5" }}>
-      {/* Header */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e0e0e0", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: "#E8906D", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14 }}>NA</div>
-          <span style={{ fontSize: 16, fontWeight: 600, color: "#222" }}>Admin Panel</span>
+    <div style={{ minHeight: "100vh", background: "#06060e", position: "relative", overflow: "hidden" }}>
+
+      {/* ── Animated background orbs ── */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+        <div style={{ position: "absolute", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,144,109,0.06) 0%, transparent 65%)", top: -200, left: -150, animation: "adminOrb1 18s ease-in-out infinite" }} />
+        <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(80,130,255,0.05) 0%, transparent 65%)", bottom: -100, right: -100, animation: "adminOrb2 22s ease-in-out infinite reverse" }} />
+        <div style={{ position: "absolute", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,144,109,0.04) 0%, transparent 65%)", top: "40%", right: "15%", animation: "adminOrb1 14s ease-in-out infinite 3s" }} />
+        {/* Subtle grid pattern */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+      </div>
+
+      {/* ── Header ── */}
+      <div style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(6,6,14,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(232,144,109,0.2)", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+        {/* Left: logo + title */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #E8906D, #c96a3f)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 15, letterSpacing: "0.05em", boxShadow: "0 0 16px rgba(232,144,109,0.4)" }}>JM</div>
+          <div>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "0.02em" }}>Admin Panel</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", margin: 0 }}>Jaimin Modi Photography</p>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="/" style={{ fontSize: 13, color: "#888", textDecoration: "none" }}>← View Site</a>
-          <button onClick={logout} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #ddd", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 13, color: "#555" }}>
-            <LogOut size={14} /> Logout
+        {/* Right: nav */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.5)", textDecoration: "none", padding: "7px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)", transition: "all 0.2s" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.4)"; (e.currentTarget as HTMLElement).style.color = "#E8906D"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+          >
+            <ExternalLink size={13} /> View Site
+          </a>
+          <button onClick={logout} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.2)", borderRadius: 8, padding: "7px 14px", cursor: "pointer", fontSize: 13, color: "rgba(255,120,120,0.8)", transition: "all 0.2s" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,80,80,0.15)"; (e.currentTarget as HTMLElement).style.color = "#ff8080"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,80,80,0.08)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,120,120,0.8)"; }}
+          >
+            <LogOut size={13} /> Logout
           </button>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", gap: 32 }}>
+      {/* ── Main content ── */}
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "36px 24px", display: "flex", flexDirection: "column", gap: 28 }}>
+
+        {/* Status toast */}
         {status && (
-          <div style={{ background: status.startsWith("✓") ? "#f0fff4" : "#fff5f5", border: `1px solid ${status.startsWith("✓") ? "#9ae6b4" : "#fed7d7"}`, borderRadius: 8, padding: "12px 16px", color: status.startsWith("✓") ? "#276749" : "#c53030", fontSize: 14 }}>
-            {status}
+          <div style={{
+            background: status.startsWith("✓") ? "rgba(52,211,153,0.12)" : "rgba(248,113,113,0.12)",
+            border: `1px solid ${status.startsWith("✓") ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
+            borderRadius: 10, padding: "13px 18px",
+            color: status.startsWith("✓") ? "#6ee7b7" : "#fca5a5",
+            fontSize: 14, display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <span style={{ fontSize: 16 }}>{status.startsWith("✓") ? "✓" : "⚠"}</span>
+            {status.slice(status.startsWith("✓") ? 2 : 2)}
+            <button onClick={() => setStatus("")} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "inherit", opacity: 0.6, fontSize: 16 }}>×</button>
           </div>
         )}
 
         {/* ── Logo ── */}
-        <Card title="Studio Logo" subtitle="Shown in the navbar — use a transparent PNG for best results">
+        <DarkCard title="Studio Logo" subtitle="Shown in the navbar — use a transparent PNG for best results" icon="🖼">
           <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-            <div style={{ width: 100, height: 100, borderRadius: 12, background: "#f5f5f5", border: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+            <div style={{ width: 96, height: 96, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
               {logoUrl
-                ? <Image src={logoUrl} alt="Logo" width={100} height={100} style={{ objectFit: "contain" }} unoptimized />
-                : <span style={{ fontSize: 28, fontWeight: 700, color: "#E8906D" }}>NA</span>}
+                ? <Image src={logoUrl} alt="Logo" width={96} height={96} style={{ objectFit: "contain" }} unoptimized />
+                : <span style={{ fontSize: 26, fontWeight: 800, color: "#E8906D" }}>JM</span>}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <p style={{ fontSize: 13, color: "#777", margin: 0 }}>PNG with transparent background recommended.<br />Square format (e.g. 200×200px) works best.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.6 }}>PNG with transparent background recommended.<br />Square format (e.g. 200×200px) works best.</p>
               <input ref={logoRef} type="file" accept="image/*" style={{ display: "none" }}
                 onChange={(e) => e.target.files?.[0] && handleConfigUpload(e.target.files[0], "logo")} />
-              <UploadBtn loading={uploading === "logo"} onClick={() => logoRef.current?.click()} />
+              <DarkUploadBtn loading={uploading === "logo"} onClick={() => logoRef.current?.click()} />
             </div>
           </div>
-        </Card>
+        </DarkCard>
 
         {/* ── Hero ── */}
-        <Card title="Hero Background" subtitle="The main background on the homepage — supports image or video">
+        <DarkCard title="Hero Background" subtitle="The main background on the homepage — supports image or video" icon="🎬">
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
             {heroUrl && (
-              <div style={{ width: 280, height: 160, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#000", position: "relative" }}>
+              <div style={{ width: 280, height: 160, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "#000", position: "relative", border: "1px solid rgba(255,255,255,0.1)" }}>
                 {["mp4","webm","mov","ogg"].some((e) => heroUrl.toLowerCase().split("?")[0].endsWith(`.${e}`)) ? (
                   <video src={heroUrl} muted autoPlay loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
@@ -279,59 +305,132 @@ export default function AdminPage() {
                 )}
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
-              <p style={{ fontSize: 13, color: "#777", margin: 0 }}>
-                Image: JPG/PNG (recommended 1920×1080)<br />
-                Video: MP4/WebM (keep under 20MB for fast loading)
-              </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: 1.6 }}>Image: JPG/PNG (recommended 1920×1080)<br />Video: MP4/WebM (keep under 20MB)</p>
               <input ref={heroRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime" style={{ display: "none" }}
                 onChange={(e) => e.target.files?.[0] && handleConfigUpload(e.target.files[0], "hero_image")} />
-              <UploadBtn loading={uploading === "hero_image"} onClick={() => heroRef.current?.click()} />
+              <DarkUploadBtn loading={uploading === "hero_image"} onClick={() => heroRef.current?.click()} />
             </div>
           </div>
-        </Card>
+        </DarkCard>
 
         {/* ── About ── */}
-        <Card title="About Us Image" subtitle="The photo shown in the About Us section">
+        <DarkCard title="About Us Image" subtitle="The photo shown in the About Us section" icon="📷">
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
             {aboutUrl && (
-              <div style={{ position: "relative", width: 220, height: 165, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+              <div style={{ position: "relative", width: 220, height: 165, borderRadius: 10, overflow: "hidden", flexShrink: 0, border: "1px solid rgba(255,255,255,0.1)" }}>
                 <Image src={aboutUrl} alt="About" fill style={{ objectFit: "cover" }} unoptimized />
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
-              <p style={{ fontSize: 13, color: "#777", margin: 0 }}>Upload a portrait or square photo (recommended: 800×600px)</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: 0 }}>Upload a portrait or square photo (recommended: 800×600px)</p>
               <input ref={aboutRef} type="file" accept="image/*" style={{ display: "none" }}
                 onChange={(e) => e.target.files?.[0] && handleConfigUpload(e.target.files[0], "about_image")} />
-              <UploadBtn loading={uploading === "about_image"} onClick={() => aboutRef.current?.click()} />
+              <DarkUploadBtn loading={uploading === "about_image"} onClick={() => aboutRef.current?.click()} />
             </div>
           </div>
-        </Card>
+        </DarkCard>
 
-        {/* ── Contact Background ── */}
-        <Card title="Contact Section Background" subtitle="Photo shown behind the Contact Us section — the studio photo works great here">
+        {/* ── Contact Section Background ── */}
+        <DarkCard title="Contact Section Background" subtitle="Photo shown behind the Contact Us section" icon="🖼">
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
             {contactBgUrl && (
-              <div style={{ position: "relative", width: 280, height: 160, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+              <div style={{ position: "relative", width: 280, height: 160, borderRadius: 10, overflow: "hidden", flexShrink: 0, border: "1px solid rgba(255,255,255,0.1)" }}>
                 <Image src={contactBgUrl} alt="Contact BG" fill style={{ objectFit: "cover" }} unoptimized />
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
-              <p style={{ fontSize: 13, color: "#777", margin: 0 }}>JPG/PNG (recommended 1920×1080). A dark overlay is applied automatically.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", margin: 0 }}>JPG/PNG (recommended 1920×1080). A dark overlay is applied automatically.</p>
               <input ref={contactBgRef} type="file" accept="image/*" style={{ display: "none" }}
                 onChange={(e) => e.target.files?.[0] && handleConfigUpload(e.target.files[0], "contact_bg")} />
-              <UploadBtn loading={uploading === "contact_bg"} onClick={() => contactBgRef.current?.click()} />
+              <DarkUploadBtn loading={uploading === "contact_bg"} onClick={() => contactBgRef.current?.click()} />
             </div>
           </div>
-        </Card>
+        </DarkCard>
+
+        {/* ── Contact Info ── */}
+        <DarkCard title="Contact Information" subtitle="Displayed on the website's Contact Us section — phone, address, email & timings" icon="📞">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {/* Phone */}
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                <Phone size={12} color="#E8906D" /> Phone Number
+              </label>
+              <input
+                type="text"
+                value={contactInfo.phone}
+                onChange={(e) => setContactInfo((c) => ({ ...c, phone: e.target.value }))}
+                style={darkInput}
+                placeholder="+91 XXXXXXXXXX"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+            {/* Email */}
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                <Mail size={12} color="#E8906D" /> Email Address
+              </label>
+              <input
+                type="email"
+                value={contactInfo.email}
+                onChange={(e) => setContactInfo((c) => ({ ...c, email: e.target.value }))}
+                style={darkInput}
+                placeholder="studio@example.com"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+            {/* Timings */}
+            <div>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                <Clock size={12} color="#E8906D" /> Business Hours
+              </label>
+              <input
+                type="text"
+                value={contactInfo.timings}
+                onChange={(e) => setContactInfo((c) => ({ ...c, timings: e.target.value }))}
+                style={darkInput}
+                placeholder="Mon – Sun : Open 24 hrs"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+            {/* Address spans full width */}
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                <MapPin size={12} color="#E8906D" /> Studio Address
+              </label>
+              <textarea
+                value={contactInfo.address}
+                onChange={(e) => setContactInfo((c) => ({ ...c, address: e.target.value }))}
+                rows={3}
+                style={{ ...darkInput, resize: "vertical" }}
+                placeholder="Full studio address..."
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+          </div>
+          <div style={{ marginTop: 20 }}>
+            <button
+              onClick={saveContactInfo}
+              disabled={savingContact}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: savingContact ? "rgba(232,144,109,0.3)" : "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "11px 24px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: savingContact ? "not-allowed" : "pointer", boxShadow: savingContact ? "none" : "0 4px 16px rgba(232,144,109,0.35)", transition: "all 0.2s" }}
+            >
+              <Check size={15} />
+              {savingContact ? "Saving…" : "Save Contact Info"}
+            </button>
+          </div>
+        </DarkCard>
 
         {/* ── Services ── */}
-        <Card title={`We Offer — Services (${services.length})`} subtitle="Add, edit, or remove the service categories shown on the homepage">
+        <DarkCard title={`We Offer — Services (${services.length})`} subtitle="Add, edit, or remove service categories shown on the homepage" icon="⚡">
           {serviceTableMissing ? (
-            <div style={{ background: "#fff5f5", border: "1px solid #fed7d7", borderRadius: 8, padding: 16 }}>
-              <p style={{ fontSize: 14, color: "#c53030", fontWeight: 600, marginBottom: 8 }}>⚠ Services table not found in Supabase</p>
-              <p style={{ fontSize: 13, color: "#555", marginBottom: 12 }}>Run this SQL in your Supabase dashboard → SQL Editor:</p>
-              <pre style={{ background: "#1a1a1a", color: "#e2e8f0", borderRadius: 6, padding: 14, fontSize: 12, overflowX: "auto", lineHeight: 1.6 }}>{`CREATE TABLE services (
+            <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: 10, padding: 18 }}>
+              <p style={{ fontSize: 14, color: "#fca5a5", fontWeight: 600, marginBottom: 8 }}>⚠ Services table not found in Supabase</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>Run this SQL in your Supabase dashboard → SQL Editor:</p>
+              <pre style={{ background: "rgba(0,0,0,0.4)", color: "#e2e8f0", borderRadius: 8, padding: 14, fontSize: 12, overflowX: "auto", lineHeight: 1.6, border: "1px solid rgba(255,255,255,0.08)" }}>{`CREATE TABLE services (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   title text NOT NULL,
   description text DEFAULT '',
@@ -342,13 +441,12 @@ export default function AdminPage() {
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read" ON services FOR SELECT USING (true);
 CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticated');`}</pre>
-              <button onClick={() => { setServiceTableMissing(false); loadData(); }} style={{ marginTop: 12, background: "#E8906D", border: "none", borderRadius: 6, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={() => { setServiceTableMissing(false); loadData(); }} style={{ marginTop: 12, background: "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "9px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 I've run the SQL — Retry
               </button>
             </div>
           ) : (
             <>
-              {/* Hidden file inputs for service images */}
               <input ref={svcImgRef} type="file" accept="image/*" style={{ display: "none" }}
                 onChange={(e) => {
                   if (e.target.files?.[0] && pendingSvcImgId) {
@@ -357,29 +455,27 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
                   }
                 }} />
 
-              {/* Service rows */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {services.map((svc) => {
-                  const isEditing = editingId === svc.id;
+                  const isEditing  = editingId === svc.id;
                   const isUploading = uploading === "svc-" + svc.id;
                   return (
-                    <div key={svc.id} style={{ display: "flex", gap: 16, alignItems: "flex-start", border: "1px solid #f0f0f0", borderRadius: 10, padding: 14, background: isEditing ? "#fef9f6" : "#fff" }}>
+                    <div key={svc.id} style={{ display: "flex", gap: 14, alignItems: "flex-start", border: `1px solid ${isEditing ? "rgba(232,144,109,0.3)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: 14, background: isEditing ? "rgba(232,144,109,0.06)" : "rgba(255,255,255,0.03)", transition: "all 0.2s" }}>
                       {/* Thumbnail */}
-                      <div style={{ position: "relative", width: 90, height: 68, borderRadius: 6, overflow: "hidden", background: "#f5f5f5", flexShrink: 0 }}>
+                      <div style={{ position: "relative", width: 88, height: 66, borderRadius: 8, overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0, border: "1px solid rgba(255,255,255,0.08)" }}>
                         {svc.image_url
                           ? <Image src={svc.image_url} alt={svc.title} fill style={{ objectFit: "cover" }} unoptimized />
-                          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#ccc" }}>No image</div>
+                          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "rgba(255,255,255,0.2)" }}>No image</div>
                         }
-                        {/* Change image overlay */}
                         <button
                           onClick={() => { setPendingSvcImgId(svc.id); svcImgRef.current?.click(); }}
                           disabled={isUploading}
-                          style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }}
+                          style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0, transition: "opacity 0.2s" }}
                           onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
                           onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
                           title="Change image"
                         >
-                          {isUploading ? <span style={{ fontSize: 10, color: "#fff" }}>…</span> : <Upload size={14} color="#fff" />}
+                          {isUploading ? <span style={{ fontSize: 10, color: "#fff" }}>…</span> : <Upload size={13} color="#fff" />}
                         </button>
                       </div>
 
@@ -390,21 +486,21 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
                             <input
                               value={editForm.title}
                               onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 14, fontWeight: 600, marginBottom: 8, boxSizing: "border-box" }}
+                              style={{ ...darkInput, marginBottom: 8, fontWeight: 600 }}
                               placeholder="Service title"
                             />
                             <textarea
                               value={editForm.description}
                               onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-                              rows={3}
-                              style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 13, resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }}
+                              rows={2}
+                              style={{ ...darkInput, resize: "vertical" }}
                               placeholder="Description"
                             />
                           </>
                         ) : (
                           <>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: "#222", margin: "0 0 4px" }}>{svc.title}</p>
-                            <p style={{ fontSize: 12, color: "#777", margin: 0, lineHeight: 1.5 }}>{svc.description || <span style={{ color: "#ccc" }}>No description</span>}</p>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: "#fff", margin: "0 0 4px" }}>{svc.title}</p>
+                            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", margin: 0, lineHeight: 1.5 }}>{svc.description || <span style={{ color: "rgba(255,255,255,0.2)" }}>No description</span>}</p>
                           </>
                         )}
                       </div>
@@ -413,13 +509,13 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                         {isEditing ? (
                           <>
-                            <button onClick={() => saveEdit(svc.id)} style={{ ...iconBtn, background: "#E8906D", color: "#fff" }} title="Save"><Check size={13} /></button>
-                            <button onClick={cancelEdit} style={{ ...iconBtn }} title="Cancel"><X size={13} /></button>
+                            <DarkIconBtn onClick={() => saveEdit(svc.id)} accent title="Save"><Check size={13} /></DarkIconBtn>
+                            <DarkIconBtn onClick={cancelEdit} title="Cancel"><X size={13} /></DarkIconBtn>
                           </>
                         ) : (
                           <>
-                            <button onClick={() => startEdit(svc)} style={{ ...iconBtn }} title="Edit"><Pencil size={13} /></button>
-                            <button onClick={() => deleteService(svc.id)} style={{ ...iconBtn, color: "#e53e3e" }} title="Delete"><Trash2 size={13} /></button>
+                            <DarkIconBtn onClick={() => startEdit(svc)} title="Edit"><Pencil size={13} /></DarkIconBtn>
+                            <DarkIconBtn onClick={() => deleteService(svc.id)} danger title="Delete"><Trash2 size={13} /></DarkIconBtn>
                           </>
                         )}
                       </div>
@@ -428,9 +524,8 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
                 })}
               </div>
 
-              {/* Add new service */}
               {addingService ? (
-                <AddServiceForm
+                <DarkAddServiceForm
                   value={newSvc}
                   onChange={setNewSvc}
                   onSave={handleAddService}
@@ -440,65 +535,150 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
               ) : (
                 <button
                   onClick={() => setAddingService(true)}
-                  style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 8, background: "none", border: "2px dashed #E8906D", borderRadius: 8, padding: "12px 20px", color: "#E8906D", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%" }}
+                  style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8, background: "none", border: "2px dashed rgba(232,144,109,0.4)", borderRadius: 10, padding: "13px 20px", color: "#E8906D", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", transition: "all 0.2s" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.8)"; (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.05)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.4)"; (e.currentTarget as HTMLElement).style.background = "none"; }}
                 >
                   <Plus size={16} /> Add New Service
                 </button>
               )}
             </>
           )}
-        </Card>
+        </DarkCard>
 
         {/* ── Gallery ── */}
-        <Card title={`Portfolio Gallery (${gallery.length} photos)`} subtitle="These photos appear in the Portfolio section on the homepage">
+        <DarkCard title={`Portfolio Gallery (${gallery.length} photos)`} subtitle="These photos appear in the Portfolio section on the homepage" icon="🖼">
           <div
             onClick={() => galleryRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files; if (f.length) handleGalleryUpload(f); }}
-            style={{ border: "2px dashed #E8906D", borderRadius: 10, padding: "28px 20px", textAlign: "center", cursor: "pointer", marginBottom: 24, background: "#FEF0EA" }}
+            style={{ border: "2px dashed rgba(232,144,109,0.35)", borderRadius: 12, padding: "32px 20px", textAlign: "center", cursor: "pointer", marginBottom: 24, background: "rgba(232,144,109,0.04)", transition: "all 0.2s" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.08)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.6)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.04)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.35)"; }}
           >
-            <Upload size={28} color="#E8906D" style={{ marginBottom: 8 }} />
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(232,144,109,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+              <Upload size={22} color="#E8906D" />
+            </div>
             <p style={{ fontSize: 15, fontWeight: 600, color: "#E8906D", margin: "0 0 4px" }}>
               {uploading === "gallery" ? "Uploading…" : "Click or drag photos here"}
             </p>
-            <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>You can select multiple photos at once</p>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", margin: 0 }}>You can select multiple photos at once</p>
             <input ref={galleryRef} type="file" accept="image/*" multiple style={{ display: "none" }}
               onChange={(e) => e.target.files?.length && handleGalleryUpload(e.target.files)} />
           </div>
 
           {gallery.length === 0 ? (
-            <p style={{ textAlign: "center", color: "#aaa", fontSize: 14 }}>No photos yet. Upload your first photo above.</p>
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 14, padding: "20px 0" }}>No photos yet. Upload your first photo above.</p>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(175px, 1fr))", gap: 10 }}>
               {gallery.map((img) => (
-                <div key={img.id} style={{ position: "relative", borderRadius: 8, overflow: "hidden", aspectRatio: "4/3", background: "#f0f0f0" }}>
+                <div key={img.id} style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "4/3", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <Image src={img.url} alt="" fill style={{ objectFit: "cover" }} unoptimized />
                   <button
                     onClick={() => deleteGalleryImage(img)}
-                    style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: "50%", background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}
                     title="Delete"
                   >
-                    <Trash2 size={13} color="#fff" />
+                    <Trash2 size={13} color="#ff8080" />
                   </button>
                 </div>
               ))}
             </div>
           )}
-        </Card>
+        </DarkCard>
       </div>
+
+      <style>{`
+        @keyframes adminOrb1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(60px, -40px) scale(1.05); }
+          66% { transform: translate(-30px, 50px) scale(0.95); }
+        }
+        @keyframes adminOrb2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-50px, 30px) scale(1.08); }
+          66% { transform: translate(40px, -35px) scale(0.92); }
+        }
+      `}</style>
     </div>
   );
 }
 
 // ── Sub-components ─────────────────────────────────────
 
-const iconBtn: React.CSSProperties = {
-  width: 30, height: 30, borderRadius: 6, border: "1px solid #e0e0e0",
-  background: "#fff", cursor: "pointer", display: "flex",
-  alignItems: "center", justifyContent: "center", color: "#555",
-};
+function FullscreenState({ type }: { type: "loading" | "no-user" | "denied" }) {
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#06060e", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 30% 40%, rgba(232,144,109,0.06) 0%, transparent 60%), radial-gradient(ellipse at 70% 60%, rgba(80,130,255,0.04) 0%, transparent 60%)" }} />
+      <div style={{ position: "relative", textAlign: "center", padding: 48, background: "rgba(255,255,255,0.04)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, maxWidth: 380 }}>
+        {type === "loading" && (
+          <>
+            <div style={{ width: 44, height: 44, border: "3px solid rgba(232,144,109,0.3)", borderTopColor: "#E8906D", borderRadius: "50%", margin: "0 auto 20px", animation: "spin 0.9s linear infinite" }} />
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", margin: 0 }}>Checking login…</p>
+          </>
+        )}
+        {type === "no-user" && (
+          <>
+            <div style={{ fontSize: 44, marginBottom: 16 }}>🔐</div>
+            <p style={{ fontSize: 18, color: "#fff", fontWeight: 600, marginBottom: 8 }}>Login Required</p>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 24 }}>Please log in to access the admin panel.</p>
+            <a href="/" style={{ color: "#E8906D", fontWeight: 600, textDecoration: "none", fontSize: 14 }}>← Go to website and log in</a>
+          </>
+        )}
+        {type === "denied" && (
+          <>
+            <div style={{ fontSize: 44, marginBottom: 16 }}>🔒</div>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Access Denied</p>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 24 }}>You do not have permission to access the admin panel.</p>
+            <a href="/" style={{ color: "#E8906D", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>← Go to website</a>
+          </>
+        )}
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+}
 
-function AddServiceForm({
+function DarkCard({ title, subtitle, icon, children }: { title: string; subtitle: string; icon: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(16px)", borderRadius: 16, padding: "26px 28px", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <span style={{ fontSize: 18 }}>{icon}</span>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: 0 }}>{title}</h2>
+      </div>
+      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", margin: "0 0 22px", paddingLeft: 28 }}>{subtitle}</p>
+      {children}
+    </div>
+  );
+}
+
+function DarkUploadBtn({ loading, onClick }: { loading: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} disabled={loading} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: loading ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", boxShadow: loading ? "none" : "0 4px 14px rgba(232,144,109,0.35)", transition: "all 0.2s" }}>
+      <Upload size={15} />
+      {loading ? "Uploading…" : "Upload New Image"}
+    </button>
+  );
+}
+
+function DarkIconBtn({ children, onClick, accent, danger, title }: { children: React.ReactNode; onClick: () => void; accent?: boolean; danger?: boolean; title?: string }) {
+  const bg = accent ? "linear-gradient(135deg, #E8906D, #c96a3f)" : "rgba(255,255,255,0.06)";
+  const borderColor = accent ? "transparent" : danger ? "rgba(255,80,80,0.2)" : "rgba(255,255,255,0.1)";
+  const color = accent ? "#fff" : danger ? "#ff8080" : "rgba(255,255,255,0.55)";
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${borderColor}`, background: bg, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color, transition: "all 0.2s" }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function DarkAddServiceForm({
   value, onChange, onSave, onCancel, loading,
 }: {
   value: { title: string; description: string };
@@ -519,69 +699,47 @@ function AddServiceForm({
   };
 
   return (
-    <div style={{ marginTop: 16, border: "1px solid #E8906D", borderRadius: 10, padding: 16, background: "#fef9f6" }}>
-      <p style={{ fontSize: 14, fontWeight: 600, color: "#E8906D", marginBottom: 12 }}>New Service</p>
-      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-        {/* Image picker */}
+    <div style={{ marginTop: 14, border: "1px solid rgba(232,144,109,0.3)", borderRadius: 12, padding: 18, background: "rgba(232,144,109,0.04)" }}>
+      <p style={{ fontSize: 14, fontWeight: 700, color: "#E8906D", marginBottom: 14 }}>+ New Service</p>
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
         <div
           onClick={() => fileRef.current?.click()}
-          style={{ width: 90, height: 68, borderRadius: 6, border: "2px dashed #E8906D", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, overflow: "hidden", background: "#fff", position: "relative" }}
+          style={{ width: 88, height: 66, borderRadius: 8, border: "2px dashed rgba(232,144,109,0.4)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, overflow: "hidden", background: "rgba(255,255,255,0.03)", position: "relative" }}
         >
           {preview
             ? <Image src={preview} alt="preview" fill style={{ objectFit: "cover" }} unoptimized />
-            : <Upload size={18} color="#E8906D" />
+            : <Upload size={17} color="#E8906D" />
           }
           <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImg} />
         </div>
-
         <div style={{ flex: 1 }}>
           <input
             value={value.title}
             onChange={(e) => onChange({ ...value, title: e.target.value })}
             placeholder="Service title *"
-            style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 14, marginBottom: 8, boxSizing: "border-box" }}
+            style={{ ...darkInput, marginBottom: 8 }}
           />
           <textarea
             value={value.description}
             onChange={(e) => onChange({ ...value, description: e.target.value })}
             placeholder="Short description"
-            rows={3}
-            style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "7px 10px", fontSize: 13, resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }}
+            rows={2}
+            style={{ ...darkInput, resize: "vertical" }}
           />
         </div>
       </div>
-
-      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+      <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
         <button
           onClick={() => onSave(imgFile)}
           disabled={loading}
-          style={{ background: loading ? "#ccc" : "#E8906D", border: "none", borderRadius: 6, padding: "8px 20px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}
+          style={{ background: loading ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "10px 22px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", boxShadow: loading ? "none" : "0 4px 14px rgba(232,144,109,0.35)" }}
         >
           {loading ? "Saving…" : "Add Service"}
         </button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd", borderRadius: 6, padding: "8px 16px", fontSize: 13, cursor: "pointer", color: "#555" }}>
+        <button onClick={onCancel} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 18px", fontSize: 13, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
           Cancel
         </button>
       </div>
     </div>
-  );
-}
-
-function Card({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: "#fff", borderRadius: 12, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
-      <h2 style={{ fontSize: 17, fontWeight: 600, color: "#222", margin: "0 0 4px" }}>{title}</h2>
-      <p style={{ fontSize: 13, color: "#999", margin: "0 0 20px" }}>{subtitle}</p>
-      {children}
-    </div>
-  );
-}
-
-function UploadBtn({ loading, onClick }: { loading: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} disabled={loading} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", background: loading ? "#ccc" : "#E8906D", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}>
-      <Upload size={16} />
-      {loading ? "Uploading…" : "Upload New Image"}
-    </button>
   );
 }
