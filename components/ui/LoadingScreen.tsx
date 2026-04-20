@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 
 export default function LoadingScreen() {
   const [hiding, setHiding] = useState(false);
   const [gone, setGone] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+
+  useEffect(() => {
+    supabase.from("site_config").select("value").eq("key", "logo").maybeSingle()
+      .then(({ data }) => { if (data?.value) setLogoUrl(data.value); });
+  }, []);
 
   useEffect(() => {
     const minTime = new Promise<void>((r) => setTimeout(r, 2600));
@@ -34,7 +42,12 @@ export default function LoadingScreen() {
         <div className="ls-ring ls-ring-outer" />
         <div className="ls-ring ls-ring-inner" />
         <div className="ls-center">
-          <span className="ls-monogram">NA</span>
+          {logoUrl ? (
+            <Image src={logoUrl} alt="Logo" width={52} height={52}
+              style={{ objectFit: "contain", borderRadius: 6 }} unoptimized />
+          ) : (
+            <span className="ls-monogram">NA</span>
+          )}
         </div>
       </div>
 
