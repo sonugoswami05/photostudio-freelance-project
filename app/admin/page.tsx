@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { useModal } from "@/contexts/ModalContext";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import { Trash2, Upload, LogOut, Pencil, X, Check, Plus, Phone, MapPin, Mail, Clock, ExternalLink } from "lucide-react";
+import { Trash2, Upload, LogOut, Pencil, X, Check, Plus, Phone, MapPin, Mail, Clock, ExternalLink, Link2, Film } from "lucide-react";
 import servicesData from "@/data/services.json";
 
 interface GalleryImage { id: string; url: string; caption: string | null; category: string | null; }
 interface Service { id: string; title: string; description: string; image_url: string; sort_order: number; }
+interface InstagramReel { id: string; url: string; thumbnail_url: string; caption: string; likes: string; sort_order: number; }
 
 const DEFAULT_CONTACT = {
   address: "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd, Near Krishna Hospital, Kadi, Gujarat 382715",
@@ -54,6 +55,14 @@ export default function AdminPage() {
   const [contactInfo, setContactInfo]   = useState(DEFAULT_CONTACT);
   const [savingContact, setSavingContact] = useState(false);
 
+  // instagram reels state
+  const [igReels, setIgReels]               = useState<InstagramReel[]>([]);
+  const [reelTableMissing, setReelTableMissing] = useState(false);
+  const [addingReel, setAddingReel]         = useState(false);
+  const [newReel, setNewReel]               = useState({ url: "", caption: "", likes: "" });
+  const [reelImgFile, setReelImgFile]       = useState<File | null>(null);
+  const [reelImgPreview, setReelImgPreview] = useState<string | null>(null);
+
   // about us text state
   const [aboutContent, setAboutContent] = useState({
     heading:  "About Jaimin Modi Photography",
@@ -77,6 +86,7 @@ export default function AdminPage() {
   const contactBgRef  = useRef<HTMLInputElement>(null);
   const svcImgRef     = useRef<HTMLInputElement>(null);
   const [pendingSvcImgId, setPendingSvcImgId] = useState<string | null>(null);
+  const reelThumbRef  = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setAuthChecked(true), 1500);
@@ -130,6 +140,14 @@ export default function AdminPage() {
     } else if (svcs && svcs.length === 0) {
       await seedServices();
     }
+
+    // reels (table may not exist yet)
+    const { data: reelData, error: reelErr } = await supabase
+      .from("instagram_reels")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (reelErr) setReelTableMissing(true);
+    else if (reelData) setIgReels(reelData);
   };
 
   const seedServices = async () => {
@@ -257,6 +275,42 @@ export default function AdminPage() {
     if (data) { setServices((s) => [...s, data]); setNewSvc({ title: "", description: "" }); setAddingService(false); setStatus("✓ New service added."); }
     else setStatus("Error: " + error?.message);
     setUploading(null);
+  };
+
+  // ── Instagram Reels ──────────────────────────────────
+  const handleAddReel = async () => {
+    if (!newReel.url.trim()) { setStatus("Please enter a reel URL."); return; }
+    setUploading("new-reel"); setStatus("");
+    let thumbnail_url = "";
+    if (reelImgFile) {
+      const url = await uploadFile(reelImgFile, "reels");
+      if (url) thumbnail_url = url;
+    }
+    const { data, error } = await supabase.from("instagram_reels").insert({
+      url: newReel.url.trim(),
+      thumbnail_url,
+      caption:    newReel.caption.trim(),
+      likes:      newReel.likes.trim(),
+      sort_order: igReels.length,
+    }).select().single();
+    if (data) {
+      setIgReels((r) => [...r, data]);
+      setNewReel({ url: "", caption: "", likes: "" });
+      setReelImgFile(null);
+      setReelImgPreview(null);
+      setAddingReel(false);
+      setStatus("✓ Reel added! It will appear on the website.");
+    } else {
+      setStatus("Error: " + error?.message);
+    }
+    setUploading(null);
+  };
+
+  const deleteReel = async (id: string) => {
+    if (!confirm("Remove this reel from the website?")) return;
+    await supabase.from("instagram_reels").delete().eq("id", id);
+    setIgReels((r) => r.filter((x) => x.id !== id));
+    setStatus("✓ Reel removed.");
   };
 
   // ── Auth guards ───────────────────────────────────────
@@ -697,6 +751,165 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.4)"; (e.currentTarget as HTMLElement).style.background = "none"; }}
                 >
                   <Plus size={16} /> Add New Service
+                </button>
+              )}
+            </>
+          )}
+        </DarkCard>
+
+        {/* ── Instagram Reels ── */}
+        <DarkCard title={`Instagram Reels (${igReels.length})`} subtitle="Add your Instagram reel links + thumbnails — shown in the Reels section between Gallery and Services" icon="🎬">
+          {reelTableMissing ? (
+            <div style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", borderRadius: 10, padding: 18 }}>
+              <p style={{ fontSize: 14, color: "#fca5a5", fontWeight: 600, marginBottom: 8 }}>⚠ instagram_reels table not found</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>Run this SQL in your Supabase dashboard → SQL Editor:</p>
+              <pre style={{ background: "rgba(0,0,0,0.4)", color: "#e2e8f0", borderRadius: 8, padding: 14, fontSize: 12, overflowX: "auto", lineHeight: 1.6, border: "1px solid rgba(255,255,255,0.08)" }}>{`CREATE TABLE instagram_reels (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  url text NOT NULL,
+  thumbnail_url text DEFAULT '',
+  caption text DEFAULT '',
+  likes text DEFAULT '',
+  sort_order integer DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE instagram_reels ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read"  ON instagram_reels FOR SELECT USING (true);
+CREATE POLICY "Auth write"   ON instagram_reels FOR ALL    USING (auth.role() = 'authenticated');`}</pre>
+              <button onClick={() => { setReelTableMissing(false); loadData(); }}
+                style={{ marginTop: 12, background: "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "9px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                I&apos;ve run the SQL — Retry
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Existing reels list */}
+              {igReels.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+                  {igReels.map((r) => (
+                    <div key={r.id} style={{ display: "flex", gap: 12, alignItems: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "10px 12px" }}>
+                      {/* Thumbnail preview */}
+                      <div style={{ width: 48, height: 72, borderRadius: 6, overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0, position: "relative", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        {r.thumbnail_url
+                          ? <Image src={r.thumbnail_url} alt="" fill style={{ objectFit: "cover" }} unoptimized />
+                          : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}><Film size={16} color="rgba(255,255,255,0.2)" /></div>
+                        }
+                      </div>
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                          <Link2 size={11} color="#E8906D" />
+                          <a href={r.url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#E8906D", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 260 }}>
+                            {r.url}
+                          </a>
+                        </div>
+                        {r.caption && <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.caption}</p>}
+                        {r.likes && <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", margin: "2px 0 0" }}>❤ {r.likes}</p>}
+                      </div>
+                      {/* Delete */}
+                      <DarkIconBtn onClick={() => deleteReel(r.id)} danger title="Remove reel">
+                        <Trash2 size={13} />
+                      </DarkIconBtn>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add reel form */}
+              {addingReel ? (
+                <div style={{ border: "1px solid rgba(232,144,109,0.3)", borderRadius: 12, padding: 18, background: "rgba(232,144,109,0.04)" }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#E8906D", marginBottom: 14 }}>+ Add Instagram Reel</p>
+
+                  <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 12 }}>
+                    {/* Thumbnail upload */}
+                    <div>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Thumbnail</p>
+                      <div
+                        onClick={() => reelThumbRef.current?.click()}
+                        style={{ width: 56, height: 84, borderRadius: 8, border: "2px dashed rgba(232,144,109,0.4)", cursor: "pointer", overflow: "hidden", background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}
+                      >
+                        {reelImgPreview
+                          ? <Image src={reelImgPreview} alt="preview" fill style={{ objectFit: "cover" }} unoptimized />
+                          : <Upload size={16} color="#E8906D" />
+                        }
+                        <input ref={reelThumbRef} type="file" accept="image/*" style={{ display: "none" }}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            setReelImgFile(f);
+                            setReelImgPreview(URL.createObjectURL(f));
+                          }} />
+                      </div>
+                    </div>
+
+                    {/* Fields */}
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div>
+                        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+                          <Link2 size={10} color="#E8906D" /> Reel URL *
+                        </label>
+                        <input
+                          type="url"
+                          value={newReel.url}
+                          onChange={(e) => setNewReel((r) => ({ ...r, url: e.target.value }))}
+                          style={darkInput}
+                          placeholder="https://www.instagram.com/reel/..."
+                          onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                          onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                        />
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Caption</label>
+                          <input
+                            type="text"
+                            value={newReel.caption}
+                            onChange={(e) => setNewReel((r) => ({ ...r, caption: e.target.value }))}
+                            style={darkInput}
+                            placeholder="Short caption…"
+                            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>❤ Likes</label>
+                          <input
+                            type="text"
+                            value={newReel.likes}
+                            onChange={(e) => setNewReel((r) => ({ ...r, likes: e.target.value }))}
+                            style={darkInput}
+                            placeholder="2.4K"
+                            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                            onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button
+                      onClick={handleAddReel}
+                      disabled={uploading === "new-reel"}
+                      style={{ background: uploading === "new-reel" ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "10px 22px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: uploading === "new-reel" ? "not-allowed" : "pointer", boxShadow: uploading === "new-reel" ? "none" : "0 4px 14px rgba(232,144,109,0.35)" }}
+                    >
+                      {uploading === "new-reel" ? "Saving…" : "Add Reel"}
+                    </button>
+                    <button
+                      onClick={() => { setAddingReel(false); setNewReel({ url: "", caption: "", likes: "" }); setReelImgFile(null); setReelImgPreview(null); }}
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 18px", fontSize: 13, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddingReel(true)}
+                  style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "2px dashed rgba(232,144,109,0.4)", borderRadius: 10, padding: "13px 20px", color: "#E8906D", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", transition: "all 0.2s" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.8)"; (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.05)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(232,144,109,0.4)"; (e.currentTarget as HTMLElement).style.background = "none"; }}
+                >
+                  <Plus size={16} /> Add Reel
                 </button>
               )}
             </>

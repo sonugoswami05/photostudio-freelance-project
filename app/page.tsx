@@ -1,5 +1,6 @@
 import Hero from "@/components/sections/Hero";
 import Gallery from "@/components/sections/Gallery";
+import InstagramReels from "@/components/sections/InstagramReels";
 import Services from "@/components/sections/Services";
 import Testimonials from "@/components/sections/Testimonials";
 import AboutUs from "@/components/sections/AboutUs";
@@ -186,6 +187,7 @@ export default function HomePage() {
 
       <Hero />
       <Gallery />
+      <InstagramReels />
       <Services />
       <Testimonials />
       <AboutUs />
