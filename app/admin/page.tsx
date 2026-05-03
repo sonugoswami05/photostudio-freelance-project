@@ -161,7 +161,10 @@ export default function AdminPage() {
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
     const ext = file.name.split(".").pop();
     const path = `${folder}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("studio-images").upload(path, file);
+    const { error } = await supabase.storage.from("studio-images").upload(path, file, {
+      contentType: file.type || "application/octet-stream",
+      cacheControl: "3600",
+    });
     if (error) { setStatus("Upload failed: " + error.message); return null; }
     const { data: { publicUrl } } = supabase.storage.from("studio-images").getPublicUrl(path);
     return publicUrl;

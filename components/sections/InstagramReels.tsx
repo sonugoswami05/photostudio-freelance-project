@@ -154,7 +154,7 @@ export default function InstagramReels() {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Phone-mockup card with inline video playback
+   Phone mockup card with inline video playback
    ───────────────────────────────────────────────────────────── */
 function ReelCard({
   reel,
@@ -164,26 +164,39 @@ function ReelCard({
   onOpenInstagram: () => void;
 }) {
   const [playing, setPlaying] = useState(false);
-  const [loaded,  setLoaded]  = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  /* Seek to first frame once metadata loads → visible poster frame */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !reel.thumbnail_url) return;
+    const onMeta = () => { try { v.currentTime = 0.01; } catch { /* ignore */ } };
+    v.addEventListener("loadedmetadata", onMeta);
+    return () => v.removeEventListener("loadedmetadata", onMeta);
+  }, [reel.thumbnail_url]);
+
+  /* Clean up on unmount */
+  useEffect(() => { return () => { videoRef.current?.pause(); }; }, []);
+
   const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation(); // don't open Instagram
+    e.stopPropagation();
+    e.preventDefault();
     const v = videoRef.current;
     if (!v) return;
     if (playing) {
       v.pause();
       setPlaying(false);
     } else {
-      v.play().catch(() => {});
-      setPlaying(true);
+      /* Reset to start if finished */
+      if (v.ended) v.currentTime = 0;
+      const prom = v.play();
+      if (prom !== undefined) {
+        prom.then(() => setPlaying(true)).catch(() => setPlaying(false));
+      } else {
+        setPlaying(true);
+      }
     }
   };
-
-  // pause when card unmounts / hidden
-  useEffect(() => {
-    return () => { videoRef.current?.pause(); };
-  }, []);
 
   const hasVideo = Boolean(reel.thumbnail_url);
 
@@ -191,7 +204,7 @@ function ReelCard({
     <div
       onClick={onOpenInstagram}
       style={{ width: 168, flexShrink: 0, cursor: "pointer" }}
-      title="Open on Instagram"
+      title="View on Instagram"
     >
       <div
         style={{
@@ -224,72 +237,85 @@ function ReelCard({
           </svg>
         </div>
 
-        {/* ── Video / placeholder area ── */}
-        <div style={{ position: "relative", width: "100%", height: 284, background: "#0a0a0a", overflow: "hidden" }}>
+        {/* ── Video area ──
+            The dark #0a0a0a parent is the "placeholder".
+            The <video> renders directly on top — no extra overlay div
+            so nothing can ever block it.                              */}
+        <div style={{
+          position: "relative", width: "100%", height: 284,
+          background: "#0a0a0a",   /* ← this IS the dark placeholder */
+          overflow: "hidden",
+        }}>
 
-          {/* Video element (always rendered when URL exists so it's ready) */}
+          {/* Video element — always rendered when URL exists */}
           {hasVideo && (
             <video
               ref={videoRef}
               src={reel.thumbnail_url}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              style={{
+                position: "absolute", inset: 0,
+                width: "100%", height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
               muted
               playsInline
               loop
               preload="metadata"
-              onLoadedData={() => setLoaded(true)}
               onEnded={() => setPlaying(false)}
             />
           )}
 
-          {/* Placeholder shown when video not loaded / no video */}
-          {(!hasVideo || !loaded) && (
+          {/* No-video fallback */}
+          {!hasVideo && (
             <div style={{
               position: "absolute", inset: 0,
-              background: "linear-gradient(160deg, #1a0800 0%, #0a0a0a 100%)",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <div style={{ fontSize: 28, opacity: 0.2 }}>🎬</div>
+              <span style={{ fontSize: 28, opacity: 0.15 }}>🎬</span>
             </div>
           )}
 
-          {/* Bottom gradient — hide when playing so video is clear */}
+          {/* Gradient overlay — only when paused (not playing) */}
           {!playing && (
             <div style={{
               position: "absolute", inset: 0, pointerEvents: "none",
-              background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)",
+              background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)",
             }} />
           )}
 
-          {/* ── Play / Pause button ── */}
+          {/* ── Play / Pause button — always highest z-index ── */}
           <div
             onClick={togglePlay}
-            title={playing ? "Pause" : "Play"}
             style={{
               position: "absolute", top: "50%", left: "50%",
               transform: "translate(-50%,-50%)",
-              width: 44, height: 44, borderRadius: "50%",
+              width: 46, height: 46, borderRadius: "50%",
               background: playing ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.22)",
-              backdropFilter: "blur(6px)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", zIndex: 10,
+              cursor: "pointer",
+              zIndex: 20,             /* always above everything */
               transition: "opacity 0.2s, background 0.2s",
-              opacity: playing ? 0 : 1, // hide when playing; re-appears on hover
-            }}
+              /* Fade out while playing; reappear on hover */
+              opacity: playing ? 0 : 1,
+            } as React.CSSProperties}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = playing ? "0" : "1")}
           >
             {playing
-              ? <Pause size={16} color="#fff" fill="#fff" />
+              ? <Pause size={16} color="#fff" />
               : <div style={{ width: 0, height: 0, borderLeft: "14px solid #fff", borderTop: "8px solid transparent", borderBottom: "8px solid transparent", marginLeft: 3 }} />
             }
           </div>
 
-          {/* Right-side action icons — hide when playing for immersion */}
+          {/* Right-side action icons — hidden while video plays */}
           {!playing && (
             <div style={{
               position: "absolute", right: 9, bottom: 52,
               display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+              zIndex: 10,
             }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                 <Heart size={17} color="#fff" />
@@ -309,7 +335,7 @@ function ReelCard({
             <div style={{
               position: "absolute",
               bottom: reel.caption ? 30 : 10,
-              left: 8,
+              left: 8, zIndex: 10,
               display: "flex", alignItems: "center", gap: 5,
             }}>
               <div style={{
@@ -333,7 +359,7 @@ function ReelCard({
           {/* Caption */}
           {!playing && reel.caption && (
             <p style={{
-              position: "absolute", bottom: 8, left: 8, right: 30,
+              position: "absolute", bottom: 8, left: 8, right: 30, zIndex: 10,
               fontSize: 9, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.45,
               textShadow: "0 1px 3px rgba(0,0,0,0.7)",
               overflow: "hidden", display: "-webkit-box",
