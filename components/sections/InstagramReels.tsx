@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { Heart, MessageCircle, Send, Home, Search, User } from "lucide-react";
+import { Heart, MessageCircle, Send, Home, Search, User, X } from "lucide-react";
 
 interface InstaReel {
   id:            string;
@@ -15,10 +15,16 @@ interface InstaReel {
 const HANDLE    = "jaimin_modi_photography";
 const REELS_URL = `https://www.instagram.com/${HANDLE}/reels/`;
 
+/** Extract shortcode from permalink, e.g. https://www.instagram.com/reel/ABC123/ → ABC123 */
+function shortcode(permalink: string): string {
+  return permalink.replace(/\/$/, "").split("/").pop() ?? "";
+}
+
 export default function InstagramReels() {
-  const [reels,       setReels]       = useState<InstaReel[]>([]);
-  const [opening,     setOpening]     = useState(false);
-  const [configured,  setConfigured]  = useState(true);
+  const [reels,      setReels]      = useState<InstaReel[]>([]);
+  const [activeReel, setActiveReel] = useState<InstaReel | null>(null);
+  const [opening,    setOpening]    = useState(false);
+  const [configured, setConfigured] = useState(true);
 
   useEffect(() => {
     fetch("/api/instagram")
@@ -30,7 +36,21 @@ export default function InstagramReels() {
       .catch(() => {});
   }, []);
 
-  // Hide section if Instagram API not configured OR returned no reels
+  // Close modal on Escape key
+  const closeModal = useCallback(() => setActiveReel(null), []);
+  useEffect(() => {
+    if (!activeReel) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeReel, closeModal]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = activeReel ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [activeReel]);
+
   if (!configured || !reels.length) return null;
 
   const openInstagram = (url: string) => {
@@ -76,7 +96,7 @@ export default function InstagramReels() {
                 <ReelCard
                   key={r.id}
                   reel={r}
-                  onOpen={() => openInstagram(r.permalink)}
+                  onOpen={() => setActiveReel(r)}
                 />
               ))}
             </div>
@@ -92,7 +112,48 @@ export default function InstagramReels() {
         </div>
       </section>
 
-      {/* ── Instagram loading overlay ── */}
+      {/* ── Reel player modal ── */}
+      {activeReel && (
+        <div
+          className="reel-modal-backdrop"
+          onClick={closeModal}
+        >
+          <div
+            className="reel-modal-inner"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button className="reel-modal-close" onClick={closeModal} aria-label="Close">
+              <X size={20} color="#fff" />
+            </button>
+
+            {/* Instagram embed iframe */}
+            <iframe
+              src={`https://www.instagram.com/reel/${shortcode(activeReel.permalink)}/embed/`}
+              width="340"
+              height="600"
+              frameBorder="0"
+              scrolling="no"
+              allowTransparency
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              style={{ display: "block", borderRadius: 16 }}
+            />
+
+            {/* Open on Instagram link */}
+            <a
+              href={activeReel.permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="reel-modal-ig-link"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Open on Instagram ↗
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* ── Instagram loading overlay (See More only) ── */}
       {opening && (
         <div className="ig-overlay">
           <div className="ig-overlay-logo">JM</div>
@@ -117,8 +178,35 @@ export default function InstagramReels() {
         }
         .reels-see-more:hover { background: #E8906D; transform: translateY(-2px); }
 
-        .ig-overlay {
+        /* ── Modal ── */
+        .reel-modal-backdrop {
           position: fixed; inset: 0; z-index: 9999;
+          background: rgba(0,0,0,0.88); backdrop-filter: blur(16px);
+          display: flex; align-items: center; justify-content: center;
+          animation: igFadeIn 0.22s ease;
+        }
+        .reel-modal-inner {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; gap: 14px;
+        }
+        .reel-modal-close {
+          position: absolute; top: -44px; right: 0;
+          width: 36px; height: 36px; border-radius: 50%;
+          background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; transition: background 0.2s;
+        }
+        .reel-modal-close:hover { background: rgba(232,144,109,0.6); }
+        .reel-modal-ig-link {
+          font-size: 12px; color: rgba(255,255,255,0.5);
+          text-decoration: none; letter-spacing: 0.04em;
+          transition: color 0.2s;
+        }
+        .reel-modal-ig-link:hover { color: #E8906D; }
+
+        /* ── See More overlay ── */
+        .ig-overlay {
+          position: fixed; inset: 0; z-index: 10000;
           background: rgba(6,6,14,0.94); backdrop-filter: blur(14px);
           display: flex; align-items: center; justify-content: center;
           flex-direction: column; gap: 20px;
@@ -151,6 +239,7 @@ export default function InstagramReels() {
           }
           .reels-scroll-wrapper::-webkit-scrollbar { display: none; }
           .reels-row { flex-wrap: nowrap !important; justify-content: flex-start !important; width: max-content; }
+          .reel-modal-inner iframe { width: 92vw !important; height: 80vw !important; min-height: 500px; }
         }
       `}</style>
     </>
@@ -158,14 +247,14 @@ export default function InstagramReels() {
 }
 
 /* ──────────────────────────────────────────────────────────
-   Phone mockup card — shows Instagram thumbnail + opens reel
+   Phone mockup card
    ────────────────────────────────────────────────────────── */
 function ReelCard({ reel, onOpen }: { reel: InstaReel; onOpen: () => void }) {
   return (
     <div
       onClick={onOpen}
       style={{ width: 168, flexShrink: 0, cursor: "pointer" }}
-      title="Watch on Instagram"
+      title="Play reel"
     >
       <div
         style={{
@@ -198,7 +287,7 @@ function ReelCard({ reel, onOpen }: { reel: InstaReel; onOpen: () => void }) {
           </svg>
         </div>
 
-        {/* ── Thumbnail (from Instagram CDN) ── */}
+        {/* ── Thumbnail ── */}
         <div style={{ position: "relative", width: "100%", height: 284, background: "#0a0a0a", overflow: "hidden" }}>
 
           {reel.thumbnail_url ? (
@@ -225,7 +314,7 @@ function ReelCard({ reel, onOpen }: { reel: InstaReel; onOpen: () => void }) {
             background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)",
           }} />
 
-          {/* Play button (opens Instagram) */}
+          {/* Play button */}
           <div style={{
             position: "absolute", top: "50%", left: "50%",
             transform: "translate(-50%,-50%)",
@@ -235,8 +324,14 @@ function ReelCard({ reel, onOpen }: { reel: InstaReel; onOpen: () => void }) {
             zIndex: 10,
             transition: "background 0.2s, transform 0.15s",
           }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.7)"; (e.currentTarget as HTMLElement).style.transform = "translate(-50%,-50%) scale(1.1)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.22)"; (e.currentTarget as HTMLElement).style.transform = "translate(-50%,-50%) scale(1)"; }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.7)";
+              (e.currentTarget as HTMLElement).style.transform = "translate(-50%,-50%) scale(1.1)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.22)";
+              (e.currentTarget as HTMLElement).style.transform = "translate(-50%,-50%) scale(1)";
+            }}
           >
             <div style={{ width: 0, height: 0, borderLeft: "14px solid #fff", borderTop: "8px solid transparent", borderBottom: "8px solid transparent", marginLeft: 3 }} />
           </div>
@@ -258,41 +353,39 @@ function ReelCard({ reel, onOpen }: { reel: InstaReel; onOpen: () => void }) {
             <Send size={17} color="#fff" />
           </div>
 
-          {/* Username */}
+          {/* Username + Caption stacked */}
           <div style={{
             position: "absolute",
-            bottom: reel.caption ? 30 : 10,
-            left: 8, zIndex: 10,
-            display: "flex", alignItems: "center", gap: 5,
+            bottom: 8, left: 8, right: 36, zIndex: 10,
+            display: "flex", flexDirection: "column", gap: 4,
           }}>
-            <div style={{
-              width: 19, height: 19, borderRadius: "50%",
-              background: "linear-gradient(135deg, #E8906D, #c96a3f)",
-              border: "1.5px solid rgba(255,255,255,0.35)",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 7, color: "#fff", fontWeight: 800 }}>JM</span>
+            {reel.caption && (
+              <p style={{
+                fontSize: 9, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.4,
+                textShadow: "0 1px 3px rgba(0,0,0,0.7)",
+                overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
+              }}>
+                {reel.caption}
+              </p>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{
+                width: 19, height: 19, borderRadius: "50%",
+                background: "linear-gradient(135deg, #E8906D, #c96a3f)",
+                border: "1.5px solid rgba(255,255,255,0.35)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 7, color: "#fff", fontWeight: 800 }}>JM</span>
+              </div>
+              <span style={{
+                fontSize: 9.5, color: "#fff", fontWeight: 700,
+                textShadow: "0 1px 3px rgba(0,0,0,0.7)",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                jaimin_modi...
+              </span>
             </div>
-            <span style={{
-              fontSize: 9.5, color: "#fff", fontWeight: 700,
-              textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-              maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              jaimin_modi...
-            </span>
           </div>
-
-          {/* Caption */}
-          {reel.caption && (
-            <p style={{
-              position: "absolute", bottom: 8, left: 8, right: 30, zIndex: 10,
-              fontSize: 9, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.45,
-              textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-              overflow: "hidden", display: "-webkit-box",
-            } as React.CSSProperties}>
-              {reel.caption}
-            </p>
-          )}
         </div>
 
         {/* ── Bottom nav ── */}
