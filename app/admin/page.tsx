@@ -787,10 +787,10 @@ CREATE POLICY "Auth write"   ON instagram_reels FOR ALL    USING (auth.role() = 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
                   {igReels.map((r) => (
                     <div key={r.id} style={{ display: "flex", gap: 12, alignItems: "center", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "10px 12px" }}>
-                      {/* Thumbnail preview */}
+                      {/* Video preview */}
                       <div style={{ width: 48, height: 72, borderRadius: 6, overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0, position: "relative", border: "1px solid rgba(255,255,255,0.08)" }}>
                         {r.thumbnail_url
-                          ? <Image src={r.thumbnail_url} alt="" fill style={{ objectFit: "cover" }} unoptimized />
+                          ? <video src={r.thumbnail_url} muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}><Film size={16} color="rgba(255,255,255,0.2)" /></div>
                         }
                       </div>
@@ -820,18 +820,22 @@ CREATE POLICY "Auth write"   ON instagram_reels FOR ALL    USING (auth.role() = 
                   <p style={{ fontSize: 14, fontWeight: 700, color: "#E8906D", marginBottom: 14 }}>+ Add Instagram Reel</p>
 
                   <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 12 }}>
-                    {/* Thumbnail upload */}
+                    {/* Video upload */}
                     <div>
-                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Thumbnail</p>
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Video</p>
                       <div
                         onClick={() => reelThumbRef.current?.click()}
-                        style={{ width: 56, height: 84, borderRadius: 8, border: "2px dashed rgba(232,144,109,0.4)", cursor: "pointer", overflow: "hidden", background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}
+                        style={{ width: 56, height: 84, borderRadius: 8, border: "2px dashed rgba(232,144,109,0.4)", cursor: "pointer", overflow: "hidden", background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", flexDirection: "column", justifyContent: "center", gap: 4, position: "relative", flexShrink: 0 }}
                       >
-                        {reelImgPreview
-                          ? <Image src={reelImgPreview} alt="preview" fill style={{ objectFit: "cover" }} unoptimized />
-                          : <Upload size={16} color="#E8906D" />
-                        }
-                        <input ref={reelThumbRef} type="file" accept="image/*" style={{ display: "none" }}
+                        {reelImgPreview ? (
+                          <video src={reelImgPreview} muted playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <>
+                            <Film size={16} color="#E8906D" />
+                            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.3 }}>MP4{"\n"}WebM</span>
+                          </>
+                        )}
+                        <input ref={reelThumbRef} type="file" accept="video/mp4,video/webm,video/quicktime,video/*" style={{ display: "none" }}
                           onChange={(e) => {
                             const f = e.target.files?.[0];
                             if (!f) return;
@@ -839,6 +843,7 @@ CREATE POLICY "Auth write"   ON instagram_reels FOR ALL    USING (auth.role() = 
                             setReelImgPreview(URL.createObjectURL(f));
                           }} />
                       </div>
+                      <p style={{ fontSize: 9, color: "rgba(255,255,255,0.25)", margin: "5px 0 0", textAlign: "center", maxWidth: 56 }}>keep under 50MB</p>
                     </div>
 
                     {/* Fields */}

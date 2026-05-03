@@ -69,9 +69,9 @@ export default function Gallery() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
                   {visible.map((img) => (
-                    <div key={img.id} style={{ position: "relative", height: 225, borderRadius: 8, overflow: "hidden", background: "#f0f0f0" }}>
+                    <div key={img.id} style={{ position: "relative", aspectRatio: "4/3", borderRadius: 8, overflow: "hidden", background: "#111" }}>
                       <Image src={img.url} alt={img.caption || "Portfolio"} fill
-                        sizes="33vw" style={{ objectFit: "cover" }} loading="lazy" unoptimized />
+                        sizes="33vw" style={{ objectFit: "contain" }} loading="lazy" unoptimized />
                     </div>
                   ))}
                 </div>
@@ -116,10 +116,10 @@ export default function Gallery() {
                   willChange: "transform",
                 }}>
                   {images.map((img, i) => (
-                    <div key={img.id} style={{ flex: "0 0 100%", position: "relative", height: 320, background: "#000" }}>
+                    <div key={img.id} style={{ flex: "0 0 100%", position: "relative", height: 340, background: "#0d0d0d" }}>
                       <Image src={img.url} alt={img.caption || "Portfolio"} fill
                         sizes="100vw"
-                        style={{ objectFit: "cover", opacity: 0.95 }}
+                        style={{ objectFit: "contain" }}
                         priority={i === 0}
                         unoptimized />
                       {/* Bottom vignette */}

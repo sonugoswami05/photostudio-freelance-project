@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Heart, MessageCircle, Send, Home, Search, User } from "lucide-react";
+import { Heart, MessageCircle, Send, Home, Search, User, Pause } from "lucide-react";
 
 export interface InstagramReel {
   id: string;
   url: string;
-  thumbnail_url: string;
+  thumbnail_url: string; // stores the uploaded video URL
   caption: string;
   likes: string;
   sort_order: number;
 }
 
-const HANDLE   = "jaimin_modi_photography";
+const HANDLE    = "jaimin_modi_photography";
 const REELS_URL = `https://www.instagram.com/${HANDLE}/reels/`;
 
 export default function InstagramReels() {
@@ -29,10 +28,9 @@ export default function InstagramReels() {
       .then(({ data }) => { if (data?.length) setReels(data); });
   }, []);
 
-  // hide section until admin adds at least one reel
   if (!reels.length) return null;
 
-  const openLink = (url: string) => {
+  const openInstagram = (url: string) => {
     setOpening(true);
     setTimeout(() => {
       window.open(url, "_blank");
@@ -70,14 +68,18 @@ export default function InstagramReels() {
           <div className="reels-scroll-wrapper">
             <div className="reels-row">
               {reels.map((r) => (
-                <ReelCard key={r.id} reel={r} onClick={() => openLink(r.url)} />
+                <ReelCard
+                  key={r.id}
+                  reel={r}
+                  onOpenInstagram={() => openInstagram(r.url)}
+                />
               ))}
             </div>
           </div>
 
           {/* ── See More ── */}
           <div style={{ textAlign: "center", marginTop: 48 }}>
-            <button onClick={() => openLink(REELS_URL)} className="reels-see-more">
+            <button onClick={() => openInstagram(REELS_URL)} className="reels-see-more">
               SEE MORE
             </button>
           </div>
@@ -85,7 +87,7 @@ export default function InstagramReels() {
         </div>
       </section>
 
-      {/* ── Loading overlay ── */}
+      {/* ── Instagram loading overlay ── */}
       {opening && (
         <div className="ig-overlay">
           <div className="ig-overlay-logo">JM</div>
@@ -95,32 +97,25 @@ export default function InstagramReels() {
       )}
 
       <style>{`
-        /* ── Reels row layout ── */
         .reels-scroll-wrapper { overflow: visible; }
         .reels-row {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
+          display: flex; gap: 20px;
+          justify-content: center; flex-wrap: wrap;
           padding-bottom: 4px;
         }
 
-        /* ── See More button ── */
         .reels-see-more {
           background: #1a1a1a; color: #fff; border: none;
           padding: 15px 46px; border-radius: 3px;
           font-size: 12px; font-weight: 800; letter-spacing: 0.13em;
-          text-transform: uppercase; cursor: pointer;
-          font-family: inherit;
+          text-transform: uppercase; cursor: pointer; font-family: inherit;
           transition: background 0.2s, transform 0.15s;
         }
         .reels-see-more:hover { background: #E8906D; transform: translateY(-2px); }
 
-        /* ── Loading overlay ── */
         .ig-overlay {
           position: fixed; inset: 0; z-index: 9999;
-          background: rgba(6,6,14,0.94);
-          backdrop-filter: blur(14px);
+          background: rgba(6,6,14,0.94); backdrop-filter: blur(14px);
           display: flex; align-items: center; justify-content: center;
           flex-direction: column; gap: 20px;
           animation: igFadeIn 0.28s ease;
@@ -129,58 +124,76 @@ export default function InstagramReels() {
           width: 74px; height: 74px; border-radius: 20px;
           background: linear-gradient(135deg, #E8906D, #c96a3f);
           display: flex; align-items: center; justify-content: center;
-          color: #fff; font-weight: 800; font-size: 24px;
-          letter-spacing: 0.05em;
+          color: #fff; font-weight: 800; font-size: 24px; letter-spacing: 0.05em;
           box-shadow: 0 0 52px rgba(232,144,109,0.55);
           animation: igPulse 1s ease infinite;
         }
         .ig-overlay-spinner {
           width: 38px; height: 38px;
-          border: 2.5px solid rgba(232,144,109,0.18);
-          border-top-color: #E8906D;
-          border-radius: 50%;
-          animation: igSpin 0.85s linear infinite;
+          border: 2.5px solid rgba(232,144,109,0.18); border-top-color: #E8906D;
+          border-radius: 50%; animation: igSpin 0.85s linear infinite;
         }
-        .ig-overlay-label {
-          font-size: 13px; color: rgba(255,255,255,0.38);
-          margin: 0; letter-spacing: 0.05em;
-        }
+        .ig-overlay-label { font-size: 13px; color: rgba(255,255,255,0.38); margin: 0; letter-spacing: 0.05em; }
 
-        @keyframes igFadeIn  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes igPulse   { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes igSpin    { to { transform: rotate(360deg); } }
+        @keyframes igFadeIn { from { opacity: 0; } to   { opacity: 1; } }
+        @keyframes igPulse  { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes igSpin   { to { transform: rotate(360deg); } }
 
-        /* ── Mobile: horizontal scroll ── */
         @media (max-width: 640px) {
           .reels-scroll-wrapper {
-            margin: 0 -20px;
-            padding: 0 20px 16px;
-            overflow-x: auto;
-            overflow-y: visible;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
+            margin: 0 -20px; padding: 0 20px 16px;
+            overflow-x: auto; overflow-y: visible;
+            scrollbar-width: none; -webkit-overflow-scrolling: touch;
           }
           .reels-scroll-wrapper::-webkit-scrollbar { display: none; }
-          .reels-row {
-            flex-wrap: nowrap !important;
-            justify-content: flex-start !important;
-            width: max-content;
-          }
+          .reels-row { flex-wrap: nowrap !important; justify-content: flex-start !important; width: max-content; }
         }
       `}</style>
     </>
   );
 }
 
-/* ── Phone-mockup card ──────────────────────────────────── */
-function ReelCard({ reel, onClick }: { reel: InstagramReel; onClick: () => void }) {
+/* ─────────────────────────────────────────────────────────────
+   Phone-mockup card with inline video playback
+   ───────────────────────────────────────────────────────────── */
+function ReelCard({
+  reel,
+  onOpenInstagram,
+}: {
+  reel: InstagramReel;
+  onOpenInstagram: () => void;
+}) {
+  const [playing, setPlaying] = useState(false);
+  const [loaded,  setLoaded]  = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation(); // don't open Instagram
+    const v = videoRef.current;
+    if (!v) return;
+    if (playing) {
+      v.pause();
+      setPlaying(false);
+    } else {
+      v.play().catch(() => {});
+      setPlaying(true);
+    }
+  };
+
+  // pause when card unmounts / hidden
+  useEffect(() => {
+    return () => { videoRef.current?.pause(); };
+  }, []);
+
+  const hasVideo = Boolean(reel.thumbnail_url);
+
   return (
     <div
-      onClick={onClick}
+      onClick={onOpenInstagram}
       style={{ width: 168, flexShrink: 0, cursor: "pointer" }}
+      title="Open on Instagram"
     >
       <div
-        className="reel-phone"
         style={{
           width: 168, borderRadius: 28, overflow: "hidden",
           border: "2.5px solid #1c1c1e", background: "#000",
@@ -190,7 +203,7 @@ function ReelCard({ reel, onClick }: { reel: InstagramReel; onClick: () => void 
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLElement;
           el.style.transform = "translateY(-8px) scale(1.025)";
-          el.style.boxShadow = "0 28px 60px rgba(0,0,0,0.26), 0 4px 12px rgba(0,0,0,0.12)";
+          el.style.boxShadow = "0 28px 60px rgba(0,0,0,0.26)";
         }}
         onMouseLeave={(e) => {
           const el = e.currentTarget as HTMLElement;
@@ -200,12 +213,10 @@ function ReelCard({ reel, onClick }: { reel: InstagramReel; onClick: () => void 
       >
         {/* ── Top bar ── */}
         <div style={{
-          background: "#000",
-          padding: "8px 13px 6px",
+          background: "#000", padding: "8px 13px 6px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.02em" }}>Reels</span>
-          {/* Camera SVG */}
           <svg width="15" height="13" viewBox="0 0 24 22" fill="none">
             <path d="M23 18a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
               stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -213,98 +224,119 @@ function ReelCard({ reel, onClick }: { reel: InstagramReel; onClick: () => void 
           </svg>
         </div>
 
-        {/* ── Thumbnail area ── */}
+        {/* ── Video / placeholder area ── */}
         <div style={{ position: "relative", width: "100%", height: 284, background: "#0a0a0a", overflow: "hidden" }}>
-          {reel.thumbnail_url ? (
-            <Image
+
+          {/* Video element (always rendered when URL exists so it's ready) */}
+          {hasVideo && (
+            <video
+              ref={videoRef}
               src={reel.thumbnail_url}
-              alt={reel.caption || "Instagram Reel — Jaimin Modi Photography"}
-              fill
-              style={{ objectFit: "cover" }}
-              unoptimized
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              muted
+              playsInline
+              loop
+              preload="metadata"
+              onLoadedData={() => setLoaded(true)}
+              onEnded={() => setPlaying(false)}
             />
-          ) : (
-            <div style={{
-              width: "100%", height: "100%",
-              background: "linear-gradient(160deg, #1a0800 0%, #0a0a0a 100%)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 32, opacity: 0.25,
-            }}>📸</div>
           )}
 
-          {/* Bottom gradient */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 50%, transparent 70%)",
-          }} />
-
-          {/* Play button */}
-          <div style={{
-            position: "absolute", top: "50%", left: "50%",
-            transform: "translate(-50%,-50%)",
-            width: 42, height: 42, borderRadius: "50%",
-            background: "rgba(255,255,255,0.2)", backdropFilter: "blur(6px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          {/* Placeholder shown when video not loaded / no video */}
+          {(!hasVideo || !loaded) && (
             <div style={{
-              width: 0, height: 0,
-              borderLeft: "14px solid #fff",
-              borderTop: "8px solid transparent",
-              borderBottom: "8px solid transparent",
-              marginLeft: 3,
+              position: "absolute", inset: 0,
+              background: "linear-gradient(160deg, #1a0800 0%, #0a0a0a 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <div style={{ fontSize: 28, opacity: 0.2 }}>🎬</div>
+            </div>
+          )}
+
+          {/* Bottom gradient — hide when playing so video is clear */}
+          {!playing && (
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)",
             }} />
+          )}
+
+          {/* ── Play / Pause button ── */}
+          <div
+            onClick={togglePlay}
+            title={playing ? "Pause" : "Play"}
+            style={{
+              position: "absolute", top: "50%", left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 44, height: 44, borderRadius: "50%",
+              background: playing ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.22)",
+              backdropFilter: "blur(6px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", zIndex: 10,
+              transition: "opacity 0.2s, background 0.2s",
+              opacity: playing ? 0 : 1, // hide when playing; re-appears on hover
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = playing ? "0" : "1")}
+          >
+            {playing
+              ? <Pause size={16} color="#fff" fill="#fff" />
+              : <div style={{ width: 0, height: 0, borderLeft: "14px solid #fff", borderTop: "8px solid transparent", borderBottom: "8px solid transparent", marginLeft: 3 }} />
+            }
           </div>
 
-          {/* Right-side action icons */}
-          <div style={{
-            position: "absolute", right: 9, bottom: 52,
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
-          }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <Heart size={17} color="#fff" />
-              {reel.likes && (
-                <span style={{ fontSize: 9, color: "#fff", fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}>
-                  {reel.likes}
-                </span>
-              )}
+          {/* Right-side action icons — hide when playing for immersion */}
+          {!playing && (
+            <div style={{
+              position: "absolute", right: 9, bottom: 52,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                <Heart size={17} color="#fff" />
+                {reel.likes && (
+                  <span style={{ fontSize: 9, color: "#fff", fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}>
+                    {reel.likes}
+                  </span>
+                )}
+              </div>
+              <MessageCircle size={17} color="#fff" />
+              <Send size={17} color="#fff" />
             </div>
-            <MessageCircle size={17} color="#fff" />
-            <Send size={17} color="#fff" />
-          </div>
+          )}
 
           {/* Username row */}
-          <div style={{
-            position: "absolute",
-            bottom: reel.caption ? 30 : 10,
-            left: 8,
-            display: "flex", alignItems: "center", gap: 5,
-          }}>
+          {!playing && (
             <div style={{
-              width: 19, height: 19, borderRadius: "50%",
-              background: "linear-gradient(135deg, #E8906D, #c96a3f)",
-              border: "1.5px solid rgba(255,255,255,0.35)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
+              position: "absolute",
+              bottom: reel.caption ? 30 : 10,
+              left: 8,
+              display: "flex", alignItems: "center", gap: 5,
             }}>
-              <span style={{ fontSize: 7, color: "#fff", fontWeight: 800 }}>JM</span>
+              <div style={{
+                width: 19, height: 19, borderRadius: "50%",
+                background: "linear-gradient(135deg, #E8906D, #c96a3f)",
+                border: "1.5px solid rgba(255,255,255,0.35)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 7, color: "#fff", fontWeight: 800 }}>JM</span>
+              </div>
+              <span style={{
+                fontSize: 9.5, color: "#fff", fontWeight: 700,
+                textShadow: "0 1px 3px rgba(0,0,0,0.7)",
+                maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>
+                jaimin_modi...
+              </span>
             </div>
-            <span style={{
-              fontSize: 9.5, color: "#fff", fontWeight: 700,
-              textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-              maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              jaimin_modi...
-            </span>
-            <span style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>Follow</span>
-          </div>
+          )}
 
           {/* Caption */}
-          {reel.caption && (
+          {!playing && reel.caption && (
             <p style={{
               position: "absolute", bottom: 8, left: 8, right: 30,
               fontSize: 9, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.45,
               textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-              display: "-webkit-box", overflow: "hidden",
+              overflow: "hidden", display: "-webkit-box",
             } as React.CSSProperties}>
               {reel.caption}
             </p>
@@ -319,19 +351,15 @@ function ReelCard({ reel, onClick }: { reel: InstagramReel; onClick: () => void 
         }}>
           <Home size={14} color="rgba(255,255,255,0.5)" />
           <Search size={14} color="rgba(255,255,255,0.5)" />
-          {/* Reels / film icon */}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.8">
-            <rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/>
-            <line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <rect x="2" y="2" width="20" height="20" rx="2"/>
+            <line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
             <line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/>
             <line x1="17" y1="17" x2="22" y2="17"/><line x1="2" y1="17" x2="7" y2="17"/>
           </svg>
           <Heart size={14} color="rgba(255,255,255,0.5)" />
-          <div style={{
-            width: 18, height: 18, borderRadius: "50%",
-            border: "1px solid rgba(255,255,255,0.35)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <User size={10} color="rgba(255,255,255,0.5)" />
           </div>
         </div>
