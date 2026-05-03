@@ -1,34 +1,37 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
-import { Heart, MessageCircle, Send, Home, Search, User, Pause } from "lucide-react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { Heart, MessageCircle, Send, Home, Search, User } from "lucide-react";
 
-export interface InstagramReel {
-  id: string;
-  url: string;
-  thumbnail_url: string; // stores the uploaded video URL
-  caption: string;
-  likes: string;
-  sort_order: number;
+interface InstaReel {
+  id:            string;
+  thumbnail_url: string;
+  permalink:     string;
+  caption:       string;
+  likes:         string;
 }
 
 const HANDLE    = "jaimin_modi_photography";
 const REELS_URL = `https://www.instagram.com/${HANDLE}/reels/`;
 
 export default function InstagramReels() {
-  const [reels,   setReels]   = useState<InstagramReel[]>([]);
-  const [opening, setOpening] = useState(false);
+  const [reels,       setReels]       = useState<InstaReel[]>([]);
+  const [opening,     setOpening]     = useState(false);
+  const [configured,  setConfigured]  = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("instagram_reels")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .then(({ data }) => { if (data?.length) setReels(data); });
+    fetch("/api/instagram")
+      .then((r) => r.json())
+      .then((json) => {
+        setConfigured(json.configured !== false);
+        if (json.reels?.length) setReels(json.reels);
+      })
+      .catch(() => {});
   }, []);
 
-  if (!reels.length) return null;
+  // Hide section if Instagram API not configured OR returned no reels
+  if (!configured || !reels.length) return null;
 
   const openInstagram = (url: string) => {
     setOpening(true);
@@ -45,15 +48,17 @@ export default function InstagramReels() {
 
           {/* ── Heading ── */}
           <div style={{ textAlign: "center", marginBottom: 52 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#E8906D", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12 }}>
+            <p style={{
+              fontSize: 11, fontWeight: 700, color: "#E8906D",
+              letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 12,
+            }}>
               @{HANDLE}
             </p>
             <h2 style={{
               fontFamily: "var(--font-display)",
               fontSize: "clamp(32px, 5vw, 58px)",
               fontWeight: 300, color: "#1e1e1e",
-              margin: "0 0 16px", lineHeight: 1.05,
-              letterSpacing: "-0.01em",
+              margin: "0 0 16px", lineHeight: 1.05, letterSpacing: "-0.01em",
             }}>
               INSTAGRAM{" "}
               <em style={{ fontStyle: "italic", fontWeight: 400, color: "#E8906D" }}>reels</em>
@@ -64,14 +69,14 @@ export default function InstagramReels() {
             </p>
           </div>
 
-          {/* ── Cards ── */}
+          {/* ── Reel cards ── */}
           <div className="reels-scroll-wrapper">
             <div className="reels-row">
               {reels.map((r) => (
                 <ReelCard
                   key={r.id}
                   reel={r}
-                  onOpenInstagram={() => openInstagram(r.url)}
+                  onOpen={() => openInstagram(r.permalink)}
                 />
               ))}
             </div>
@@ -103,7 +108,6 @@ export default function InstagramReels() {
           justify-content: center; flex-wrap: wrap;
           padding-bottom: 4px;
         }
-
         .reels-see-more {
           background: #1a1a1a; color: #fff; border: none;
           padding: 15px 46px; border-radius: 3px;
@@ -153,58 +157,15 @@ export default function InstagramReels() {
   );
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Phone mockup card with inline video playback
-   ───────────────────────────────────────────────────────────── */
-function ReelCard({
-  reel,
-  onOpenInstagram,
-}: {
-  reel: InstagramReel;
-  onOpenInstagram: () => void;
-}) {
-  const [playing, setPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  /* Seek to first frame once metadata loads → visible poster frame */
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !reel.thumbnail_url) return;
-    const onMeta = () => { try { v.currentTime = 0.01; } catch { /* ignore */ } };
-    v.addEventListener("loadedmetadata", onMeta);
-    return () => v.removeEventListener("loadedmetadata", onMeta);
-  }, [reel.thumbnail_url]);
-
-  /* Clean up on unmount */
-  useEffect(() => { return () => { videoRef.current?.pause(); }; }, []);
-
-  const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    const v = videoRef.current;
-    if (!v) return;
-    if (playing) {
-      v.pause();
-      setPlaying(false);
-    } else {
-      /* Reset to start if finished */
-      if (v.ended) v.currentTime = 0;
-      const prom = v.play();
-      if (prom !== undefined) {
-        prom.then(() => setPlaying(true)).catch(() => setPlaying(false));
-      } else {
-        setPlaying(true);
-      }
-    }
-  };
-
-  const hasVideo = Boolean(reel.thumbnail_url);
-
+/* ──────────────────────────────────────────────────────────
+   Phone mockup card — shows Instagram thumbnail + opens reel
+   ────────────────────────────────────────────────────────── */
+function ReelCard({ reel, onOpen }: { reel: InstaReel; onOpen: () => void }) {
   return (
     <div
-      onClick={onOpenInstagram}
+      onClick={onOpen}
       style={{ width: 168, flexShrink: 0, cursor: "pointer" }}
-      title="View on Instagram"
+      title="Watch on Instagram"
     >
       <div
         style={{
@@ -237,127 +198,92 @@ function ReelCard({
           </svg>
         </div>
 
-        {/* ── Video area ──
-            The dark #0a0a0a parent is the "placeholder".
-            The <video> renders directly on top — no extra overlay div
-            so nothing can ever block it.                              */}
-        <div style={{
-          position: "relative", width: "100%", height: 284,
-          background: "#0a0a0a",   /* ← this IS the dark placeholder */
-          overflow: "hidden",
-        }}>
+        {/* ── Thumbnail (from Instagram CDN) ── */}
+        <div style={{ position: "relative", width: "100%", height: 284, background: "#0a0a0a", overflow: "hidden" }}>
 
-          {/* Video element — always rendered when URL exists */}
-          {hasVideo && (
-            <video
-              ref={videoRef}
+          {reel.thumbnail_url ? (
+            <Image
               src={reel.thumbnail_url}
-              style={{
-                position: "absolute", inset: 0,
-                width: "100%", height: "100%",
-                objectFit: "cover",
-                display: "block",
-              }}
-              muted
-              playsInline
-              loop
-              preload="metadata"
-              onEnded={() => setPlaying(false)}
+              alt={reel.caption || "Instagram Reel — Jaimin Modi Photography"}
+              fill
+              style={{ objectFit: "cover" }}
+              unoptimized
             />
-          )}
-
-          {/* No-video fallback */}
-          {!hasVideo && (
+          ) : (
             <div style={{
               position: "absolute", inset: 0,
               display: "flex", alignItems: "center", justifyContent: "center",
+              background: "linear-gradient(160deg, #1a0800, #0a0a0a)",
             }}>
               <span style={{ fontSize: 28, opacity: 0.15 }}>🎬</span>
             </div>
           )}
 
-          {/* Gradient overlay — only when paused (not playing) */}
-          {!playing && (
-            <div style={{
-              position: "absolute", inset: 0, pointerEvents: "none",
-              background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)",
-            }} />
-          )}
+          {/* Gradient overlay */}
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)",
+          }} />
 
-          {/* ── Play / Pause button — always highest z-index ── */}
-          <div
-            onClick={togglePlay}
-            style={{
-              position: "absolute", top: "50%", left: "50%",
-              transform: "translate(-50%,-50%)",
-              width: 46, height: 46, borderRadius: "50%",
-              background: playing ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.22)",
-              backdropFilter: "blur(8px)",
-              WebkitBackdropFilter: "blur(8px)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer",
-              zIndex: 20,             /* always above everything */
-              transition: "opacity 0.2s, background 0.2s",
-              /* Fade out while playing; reappear on hover */
-              opacity: playing ? 0 : 1,
-            } as React.CSSProperties}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = playing ? "0" : "1")}
+          {/* Play button (opens Instagram) */}
+          <div style={{
+            position: "absolute", top: "50%", left: "50%",
+            transform: "translate(-50%,-50%)",
+            width: 46, height: 46, borderRadius: "50%",
+            background: "rgba(255,255,255,0.22)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 10,
+            transition: "background 0.2s, transform 0.15s",
+          }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(232,144,109,0.7)"; (e.currentTarget as HTMLElement).style.transform = "translate(-50%,-50%) scale(1.1)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.22)"; (e.currentTarget as HTMLElement).style.transform = "translate(-50%,-50%) scale(1)"; }}
           >
-            {playing
-              ? <Pause size={16} color="#fff" />
-              : <div style={{ width: 0, height: 0, borderLeft: "14px solid #fff", borderTop: "8px solid transparent", borderBottom: "8px solid transparent", marginLeft: 3 }} />
-            }
+            <div style={{ width: 0, height: 0, borderLeft: "14px solid #fff", borderTop: "8px solid transparent", borderBottom: "8px solid transparent", marginLeft: 3 }} />
           </div>
 
-          {/* Right-side action icons — hidden while video plays */}
-          {!playing && (
-            <div style={{
-              position: "absolute", right: 9, bottom: 52,
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
-              zIndex: 10,
-            }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                <Heart size={17} color="#fff" />
-                {reel.likes && (
-                  <span style={{ fontSize: 9, color: "#fff", fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}>
-                    {reel.likes}
-                  </span>
-                )}
-              </div>
-              <MessageCircle size={17} color="#fff" />
-              <Send size={17} color="#fff" />
+          {/* Right-side action icons */}
+          <div style={{
+            position: "absolute", right: 9, bottom: 52, zIndex: 10,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <Heart size={17} color="#fff" />
+              {reel.likes && (
+                <span style={{ fontSize: 9, color: "#fff", fontWeight: 700, textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}>
+                  {reel.likes}
+                </span>
+              )}
             </div>
-          )}
+            <MessageCircle size={17} color="#fff" />
+            <Send size={17} color="#fff" />
+          </div>
 
-          {/* Username row */}
-          {!playing && (
+          {/* Username */}
+          <div style={{
+            position: "absolute",
+            bottom: reel.caption ? 30 : 10,
+            left: 8, zIndex: 10,
+            display: "flex", alignItems: "center", gap: 5,
+          }}>
             <div style={{
-              position: "absolute",
-              bottom: reel.caption ? 30 : 10,
-              left: 8, zIndex: 10,
-              display: "flex", alignItems: "center", gap: 5,
+              width: 19, height: 19, borderRadius: "50%",
+              background: "linear-gradient(135deg, #E8906D, #c96a3f)",
+              border: "1.5px solid rgba(255,255,255,0.35)",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
             }}>
-              <div style={{
-                width: 19, height: 19, borderRadius: "50%",
-                background: "linear-gradient(135deg, #E8906D, #c96a3f)",
-                border: "1.5px solid rgba(255,255,255,0.35)",
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>
-                <span style={{ fontSize: 7, color: "#fff", fontWeight: 800 }}>JM</span>
-              </div>
-              <span style={{
-                fontSize: 9.5, color: "#fff", fontWeight: 700,
-                textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-                maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              }}>
-                jaimin_modi...
-              </span>
+              <span style={{ fontSize: 7, color: "#fff", fontWeight: 800 }}>JM</span>
             </div>
-          )}
+            <span style={{
+              fontSize: 9.5, color: "#fff", fontWeight: 700,
+              textShadow: "0 1px 3px rgba(0,0,0,0.7)",
+              maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              jaimin_modi...
+            </span>
+          </div>
 
           {/* Caption */}
-          {!playing && reel.caption && (
+          {reel.caption && (
             <p style={{
               position: "absolute", bottom: 8, left: 8, right: 30, zIndex: 10,
               fontSize: 9, color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.45,
