@@ -9,6 +9,7 @@ import servicesData from "@/data/services.json";
 
 interface GalleryImage { id: string; url: string; caption: string | null; category: string | null; }
 interface Service { id: string; title: string; description: string; image_url: string; sort_order: number; }
+interface Testimonial { id: string; name: string; location: string; rating: number; review: string; sort_order: number; }
 
 const DEFAULT_CONTACT = {
   address: "Shefali Compound Near Shefali Cinema, Kadi - Detroj Rd, Near Krishna Hospital, Kadi, Gujarat 382715",
@@ -54,6 +55,12 @@ export default function AdminPage() {
   const [contactInfo, setContactInfo]   = useState(DEFAULT_CONTACT);
   const [savingContact, setSavingContact] = useState(false);
 
+  // testimonials state
+  const [testimonials,     setTestimonials]     = useState<Testimonial[]>([]);
+  const [addingTestimonial, setAddingTestimonial] = useState(false);
+  const [savingTestimonial, setSavingTestimonial] = useState(false);
+  const [newTestimonial,   setNewTestimonial]   = useState({ name: "", location: "", rating: 5, review: "" });
+
   // instagram connection check
   const [igStatus, setIgStatus] = useState<{ checking: boolean; configured?: boolean; count?: number; error?: string }>({ checking: false });
 
@@ -91,11 +98,13 @@ export default function AdminPage() {
   }, [user]);
 
   const loadData = async () => {
-    const [{ data: imgs }, { data: cfg }, { data: svcs, error: svcsErr }] = await Promise.all([
+    const [{ data: imgs }, { data: cfg }, { data: svcs, error: svcsErr }, { data: reviews }] = await Promise.all([
       supabase.from("gallery_images").select("*").order("created_at", { ascending: false }),
       supabase.from("site_config").select("*"),
       supabase.from("services").select("*").order("sort_order", { ascending: true }),
+      supabase.from("testimonials").select("*").order("sort_order", { ascending: true }),
     ]);
+    if (reviews) setTestimonials(reviews);
 
     if (imgs) setGallery(imgs);
     if (cfg) {
@@ -264,6 +273,35 @@ export default function AdminPage() {
     if (data) { setServices((s) => [...s, data]); setNewSvc({ title: "", description: "" }); setAddingService(false); setStatus("✓ New service added."); }
     else setStatus("Error: " + error?.message);
     setUploading(null);
+  };
+
+  // ── Testimonials ─────────────────────────────────────
+  const addTestimonial = async () => {
+    if (!newTestimonial.name.trim() || !newTestimonial.review.trim()) {
+      setStatus("Please enter a name and review."); return;
+    }
+    setSavingTestimonial(true); setStatus("");
+    const { data, error } = await supabase.from("testimonials").insert({
+      name:       newTestimonial.name.trim(),
+      location:   newTestimonial.location.trim(),
+      rating:     newTestimonial.rating,
+      review:     newTestimonial.review.trim(),
+      sort_order: testimonials.length,
+    }).select().single();
+    if (data) {
+      setTestimonials((t) => [...t, data]);
+      setNewTestimonial({ name: "", location: "", rating: 5, review: "" });
+      setAddingTestimonial(false);
+      setStatus("✓ Testimonial added!");
+    } else setStatus("Error: " + error?.message);
+    setSavingTestimonial(false);
+  };
+
+  const deleteTestimonial = async (id: string) => {
+    if (!confirm("Delete this testimonial?")) return;
+    await supabase.from("testimonials").delete().eq("id", id);
+    setTestimonials((t) => t.filter((r) => r.id !== id));
+    setStatus("✓ Testimonial deleted.");
   };
 
   // ── Instagram connection check ───────────────────────
@@ -791,6 +829,87 @@ CREATE POLICY "Auth write" ON services FOR ALL USING (auth.role() = 'authenticat
               </div>
             </div>
           </div>
+        </DarkCard>
+
+        {/* ── Testimonials ── */}
+        <DarkCard title={`Testimonials (${testimonials.length})`} subtitle="Copy reviews from Google and paste them here — they show live on the website" icon="⭐">
+
+          {/* Existing list */}
+          {testimonials.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+              {testimonials.map((t) => (
+                <div key={t.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #E8906D, #c96a3f)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                    {t.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{t.name}</span>
+                      {t.location && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{t.location}</span>}
+                      <span style={{ fontSize: 12, color: "#E8906D", marginLeft: "auto" }}>{"★".repeat(t.rating)}</span>
+                    </div>
+                    <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } as React.CSSProperties}>
+                      {t.review}
+                    </p>
+                  </div>
+                  <button onClick={() => deleteTestimonial(t.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, flexShrink: 0 }} title="Delete">
+                    <Trash2 size={14} color="#ff8080" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add form */}
+          {addingTestimonial ? (
+            <div style={{ border: "1px solid rgba(232,144,109,0.3)", borderRadius: 12, padding: 18, background: "rgba(232,144,109,0.04)" }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#E8906D", marginBottom: 14 }}>+ New Testimonial</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <input
+                  value={newTestimonial.name}
+                  onChange={(e) => setNewTestimonial((v) => ({ ...v, name: e.target.value }))}
+                  placeholder="Reviewer name *"
+                  style={darkInput}
+                />
+                <input
+                  value={newTestimonial.location}
+                  onChange={(e) => setNewTestimonial((v) => ({ ...v, location: e.target.value }))}
+                  placeholder="Location (e.g. Kadi, Gujarat)"
+                  style={darkInput}
+                />
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: 6 }}>Rating</label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button key={star} onClick={() => setNewTestimonial((v) => ({ ...v, rating: star }))}
+                      style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: star <= newTestimonial.rating ? "#E8906D" : "rgba(255,255,255,0.2)", transition: "color 0.15s" }}>
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <textarea
+                value={newTestimonial.review}
+                onChange={(e) => setNewTestimonial((v) => ({ ...v, review: e.target.value }))}
+                placeholder="Paste the review text here *"
+                rows={4}
+                style={{ ...darkInput, resize: "vertical", marginBottom: 14 }}
+              />
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={addTestimonial} disabled={savingTestimonial} style={{ background: savingTestimonial ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "10px 22px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: savingTestimonial ? "not-allowed" : "pointer", boxShadow: savingTestimonial ? "none" : "0 4px 14px rgba(232,144,109,0.35)" }}>
+                  {savingTestimonial ? "Saving…" : "Add Testimonial"}
+                </button>
+                <button onClick={() => { setAddingTestimonial(false); setNewTestimonial({ name: "", location: "", rating: 5, review: "" }); }} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 18px", fontSize: 13, cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setAddingTestimonial(true)} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(232,144,109,0.08)", border: "1px solid rgba(232,144,109,0.25)", borderRadius: 8, padding: "10px 18px", color: "#E8906D", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
+              <Plus size={15} /> Add Testimonial
+            </button>
+          )}
         </DarkCard>
 
         {/* ── Gallery ── */}

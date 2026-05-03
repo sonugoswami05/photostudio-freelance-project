@@ -1,7 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import testimonialsData from "@/data/testimonials.json";
+import { supabase } from "@/lib/supabase";
+import testimonialsJson from "@/data/testimonials.json";
+
+interface Testimonial {
+  id:       string | number;
+  name:     string;
+  location: string;
+  rating:   number;
+  review:   string;
+}
+
+function getInitials(name: string) {
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
 
 function ThumbsUp() {
   return (
@@ -13,79 +26,83 @@ function ThumbsUp() {
 }
 
 export default function Testimonials() {
+  const [items,   setItems]   = useState<Testimonial[]>([]);
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % testimonialsData.length);
-    }, 4000);
-    return () => clearInterval(timer);
+    supabase
+      .from("testimonials")
+      .select("id, name, location, rating, review")
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) setItems(data);
+        else setItems(testimonialsJson as Testimonial[]);
+      })
+      .catch(() => setItems(testimonialsJson as Testimonial[]));
   }, []);
 
-  const t = testimonialsData[current];
+  useEffect(() => {
+    if (items.length < 2) return;
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % items.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [items.length]);
+
+  if (!items.length) return null;
+
+  const t = items[current];
 
   return (
     <section id="testimonials" className="section-testimonials" style={{ position: "relative", minHeight: 380 }}>
-      {/* Content */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          padding: "60px 0 50px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(26px, 3vw, 38px)",
-            fontWeight: 400,
-            color: "#fff",
-            marginBottom: 32,
-            textAlign: "center",
-          }}
-        >
+      <div style={{ position: "relative", zIndex: 1, padding: "60px 0 50px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+
+        <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3vw, 38px)", fontWeight: 400, color: "#fff", marginBottom: 32, textAlign: "center" }}>
           Testimonials
         </h2>
 
-        <div
-          key={current}
-          style={{
-            maxWidth: 620,
-            width: "100%",
-            textAlign: "center",
-            padding: "0 24px",
-            animation: "fadeIn 0.5s ease",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <ThumbsUp />
+        <div key={current} style={{ maxWidth: 620, width: "100%", textAlign: "center", padding: "0 24px", animation: "fadeIn 0.5s ease" }}>
+          {/* Avatar initials */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: "50%",
+              background: "linear-gradient(135deg, #E8906D, #c96a3f)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontWeight: 800, fontSize: 16, letterSpacing: "0.04em",
+              boxShadow: "0 0 20px rgba(232,144,109,0.4)",
+            }}>
+              {getInitials(t.name)}
+            </div>
           </div>
+
+          {/* Stars */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 3, marginBottom: 14, fontSize: 16, color: "#E8906D" }}>
+            {Array.from({ length: t.rating ?? 5 }).map((_, i) => <span key={i}>★</span>)}
+          </div>
+
+          {/* Review text */}
           <p style={{ fontSize: 15, color: "rgba(255,255,255,0.78)", lineHeight: 1.85, marginBottom: 20, fontStyle: "italic" }}>
-            "{t.review}"
+            &ldquo;{t.review}&rdquo;
           </p>
-          <p style={{ fontSize: 14, fontWeight: 700, color: "#E8906D", margin: "0 0 4px", letterSpacing: "0.05em" }}>
+
+          {/* Name + location */}
+          <p style={{ fontSize: 14, fontWeight: 700, color: "#E8906D", margin: "0 0 2px", letterSpacing: "0.05em" }}>
             {t.name}
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 2, color: "#E8906D", fontSize: 13 }}>
-            ★★★★★
-          </div>
+          {t.location && (
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>{t.location}</p>
+          )}
         </div>
 
+        {/* Dots */}
         <div style={{ display: "flex", gap: 8, marginTop: 28 }}>
-          {testimonialsData.map((_, i) => (
+          {items.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               style={{
-                width: i === current ? 24 : 8,
-                height: 8,
-                borderRadius: 4,
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
+                width: i === current ? 24 : 8, height: 8, borderRadius: 4,
+                border: "none", cursor: "pointer", padding: 0,
                 background: i === current ? "#E8906D" : "rgba(255,255,255,0.25)",
                 transition: "all 0.35s ease",
                 boxShadow: i === current ? "0 0 8px rgba(232,144,109,0.7)" : "none",
