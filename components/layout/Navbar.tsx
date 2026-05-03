@@ -124,7 +124,7 @@ export default function Navbar() {
                 color: "#fff", fontWeight: 700, fontSize: 15, letterSpacing: "0.05em",
               }}>JM</div>
             )}
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#333", letterSpacing: "0.03em" }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#333", letterSpacing: "0.03em" }}>
               Jaimin Modi Photography
             </span>
           </button>
@@ -184,7 +184,7 @@ export default function Navbar() {
             ) : (
               <div style={{ width: 32, height: 32, borderRadius: 6, background: "#E8906D", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>JM</div>
             )}
-            <span style={{ fontSize: 15, fontWeight: 600, color: "#333", letterSpacing: "0.02em" }}>
+            <span style={{ fontSize: 15, fontWeight: 800, color: "#333", letterSpacing: "0.02em" }}>
               Jaimin Modi Photography
             </span>
           </button>
