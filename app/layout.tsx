@@ -13,7 +13,7 @@ import EnquireModal from "@/components/ui/EnquireModal";
 import ProfileModal from "@/components/ui/ProfileModal";
 import LoadingScreen from "@/components/ui/LoadingScreen";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaiminmodiphotography.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaiminmodiphotography.in";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],

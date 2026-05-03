@@ -5,7 +5,7 @@ import Testimonials from "@/components/sections/Testimonials";
 import AboutUs from "@/components/sections/AboutUs";
 import ContactSection from "@/components/sections/ContactSection";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaiminmodiphotography.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaiminmodiphotography.in";
 
 // ── JSON-LD Structured Data ──────────────────────────────────────────────────
 const jsonLd = {
