@@ -54,6 +54,21 @@ export default function AdminPage() {
   const [contactInfo, setContactInfo]   = useState(DEFAULT_CONTACT);
   const [savingContact, setSavingContact] = useState(false);
 
+  // about us text state
+  const [aboutContent, setAboutContent] = useState({
+    heading:  "About Jaimin Modi Photography",
+    subtitle: "Wedding & Candid Photographer · Kadi, Gujarat",
+    para1:    "Welcome to Jaimin Modi Photography — one of the most trusted photography studios in Kadi, Mehsana, Gujarat. We specialise in capturing life's most precious moments through authentic, artistic, and emotionally rich imagery.",
+    para2:    "From candid wedding photography and pre-wedding shoots to model portfolios, baby photography, and cinematic video — our studio brings creativity and passion to every frame. With years of experience serving clients across Kadi, Mehsana, Ahmedabad, and all of Gujarat, we understand how to tell your story beautifully.",
+    stats: [
+      { number: "500+", label: "Weddings Photographed" },
+      { number: "8+",   label: "Years of Experience" },
+      { number: "15+",  label: "Services Offered" },
+      { number: "100%", label: "Client Satisfaction" },
+    ],
+  });
+  const [savingAbout, setSavingAbout] = useState(false);
+
   // refs
   const galleryRef    = useRef<HTMLInputElement>(null);
   const logoRef       = useRef<HTMLInputElement>(null);
@@ -91,6 +106,21 @@ export default function AdminPage() {
         email:   get("contact_email")   || DEFAULT_CONTACT.email,
         phone:   get("contact_phone")   || DEFAULT_CONTACT.phone,
         timings: get("contact_timings") || DEFAULT_CONTACT.timings,
+      });
+      const rawStats = get("about_stats");
+      setAboutContent({
+        heading:  get("about_heading")  || "About Jaimin Modi Photography",
+        subtitle: get("about_subtitle") || "Wedding & Candid Photographer · Kadi, Gujarat",
+        para1:    get("about_para1")    || "Welcome to Jaimin Modi Photography — one of the most trusted photography studios in Kadi, Mehsana, Gujarat. We specialise in capturing life's most precious moments through authentic, artistic, and emotionally rich imagery.",
+        para2:    get("about_para2")    || "From candid wedding photography and pre-wedding shoots to model portfolios, baby photography, and cinematic video — our studio brings creativity and passion to every frame. With years of experience serving clients across Kadi, Mehsana, Ahmedabad, and all of Gujarat, we understand how to tell your story beautifully.",
+        stats: rawStats
+          ? (JSON.parse(rawStats) as { number: string; label: string }[])
+          : [
+            { number: "500+", label: "Weddings Photographed" },
+            { number: "8+",   label: "Years of Experience" },
+            { number: "15+",  label: "Services Offered" },
+            { number: "100%", label: "Client Satisfaction" },
+          ],
       });
     }
     if (svcsErr) {
@@ -169,6 +199,23 @@ export default function AdminPage() {
     ));
     setSavingContact(false);
     setStatus("✓ Contact info updated!");
+  };
+
+  // ── About Us Content ──────────────────────────────────
+  const saveAboutContent = async () => {
+    setSavingAbout(true); setStatus("");
+    const rows = [
+      { key: "about_heading",  value: aboutContent.heading },
+      { key: "about_subtitle", value: aboutContent.subtitle },
+      { key: "about_para1",    value: aboutContent.para1 },
+      { key: "about_para2",    value: aboutContent.para2 },
+      { key: "about_stats",    value: JSON.stringify(aboutContent.stats) },
+    ];
+    await Promise.all(rows.map((r) =>
+      supabase.from("site_config").upsert({ ...r, updated_at: new Date().toISOString() })
+    ));
+    setSavingAbout(false);
+    setStatus("✓ About Us content updated!");
   };
 
   // ── Services ─────────────────────────────────────────
@@ -328,6 +375,116 @@ export default function AdminPage() {
                 onChange={(e) => e.target.files?.[0] && handleConfigUpload(e.target.files[0], "about_image")} />
               <DarkUploadBtn loading={uploading === "about_image"} onClick={() => aboutRef.current?.click()} />
             </div>
+          </div>
+        </DarkCard>
+
+        {/* ── About Us Content ── */}
+        <DarkCard title="About Us — Text Content" subtitle="Edit the heading, tagline, paragraphs and stats shown in the About section" icon="✍️">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+            {/* Heading */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>Section Heading</label>
+              <input
+                type="text"
+                value={aboutContent.heading}
+                onChange={(e) => setAboutContent((c) => ({ ...c, heading: e.target.value }))}
+                style={darkInput}
+                placeholder="About Jaimin Modi Photography"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+
+            {/* Subtitle / tagline */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>Tagline / Subtitle</label>
+              <input
+                type="text"
+                value={aboutContent.subtitle}
+                onChange={(e) => setAboutContent((c) => ({ ...c, subtitle: e.target.value }))}
+                style={darkInput}
+                placeholder="Wedding & Candid Photographer · Kadi, Gujarat"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+
+            {/* Paragraph 1 */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>Paragraph 1</label>
+              <textarea
+                value={aboutContent.para1}
+                onChange={(e) => setAboutContent((c) => ({ ...c, para1: e.target.value }))}
+                rows={4}
+                style={{ ...darkInput, resize: "vertical" }}
+                placeholder="Introduction paragraph…"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+
+            {/* Paragraph 2 */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>Paragraph 2</label>
+              <textarea
+                value={aboutContent.para2}
+                onChange={(e) => setAboutContent((c) => ({ ...c, para2: e.target.value }))}
+                rows={4}
+                style={{ ...darkInput, resize: "vertical" }}
+                placeholder="Services / experience paragraph…"
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            </div>
+
+            {/* Stats */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 10, letterSpacing: "0.06em", textTransform: "uppercase" }}>Achievement Stats (4 boxes)</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {aboutContent.stats.map((stat, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: "10px 12px", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <input
+                      type="text"
+                      value={stat.number}
+                      onChange={(e) => {
+                        const updated = [...aboutContent.stats];
+                        updated[i] = { ...updated[i], number: e.target.value };
+                        setAboutContent((c) => ({ ...c, stats: updated }));
+                      }}
+                      style={{ ...darkInput, width: 72, flexShrink: 0, textAlign: "center", fontWeight: 700, fontSize: 15, color: "#E8906D", padding: "8px 10px" }}
+                      placeholder="500+"
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                    />
+                    <input
+                      type="text"
+                      value={stat.label}
+                      onChange={(e) => {
+                        const updated = [...aboutContent.stats];
+                        updated[i] = { ...updated[i], label: e.target.value };
+                        setAboutContent((c) => ({ ...c, stats: updated }));
+                      }}
+                      style={{ ...darkInput, flex: 1, padding: "8px 10px", fontSize: 12 }}
+                      placeholder="Label"
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(232,144,109,0.5)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+          <div style={{ marginTop: 20 }}>
+            <button
+              onClick={saveAboutContent}
+              disabled={savingAbout}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: savingAbout ? "rgba(232,144,109,0.3)" : "linear-gradient(135deg, #E8906D, #c96a3f)", border: "none", borderRadius: 8, padding: "11px 24px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: savingAbout ? "not-allowed" : "pointer", boxShadow: savingAbout ? "none" : "0 4px 16px rgba(232,144,109,0.35)", transition: "all 0.2s" }}
+            >
+              <Check size={15} />
+              {savingAbout ? "Saving…" : "Save About Us"}
+            </button>
           </div>
         </DarkCard>
 

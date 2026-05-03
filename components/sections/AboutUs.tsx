@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
-const DEFAULT = "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80";
+const DEFAULT_IMG = "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80";
 
-const highlights = [
+const DEFAULT_STATS = [
   { number: "500+", label: "Weddings Photographed" },
   { number: "8+",   label: "Years of Experience" },
   { number: "15+",  label: "Services Offered" },
@@ -14,11 +14,30 @@ const highlights = [
 ];
 
 export default function AboutUs() {
-  const [aboutImg, setAboutImg] = useState(DEFAULT);
+  const [aboutImg,  setAboutImg]  = useState(DEFAULT_IMG);
+  const [heading,   setHeading]   = useState("About Jaimin Modi Photography");
+  const [subtitle,  setSubtitle]  = useState("Wedding & Candid Photographer · Kadi, Gujarat");
+  const [para1,     setPara1]     = useState("Welcome to Jaimin Modi Photography — one of the most trusted photography studios in Kadi, Mehsana, Gujarat. We specialise in capturing life's most precious moments through authentic, artistic, and emotionally rich imagery.");
+  const [para2,     setPara2]     = useState("From candid wedding photography and pre-wedding shoots to model portfolios, baby photography, and cinematic video — our studio brings creativity and passion to every frame. With years of experience serving clients across Kadi, Mehsana, Ahmedabad, and all of Gujarat, we understand how to tell your story beautifully.");
+  const [stats,     setStats]     = useState(DEFAULT_STATS);
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "about_image").maybeSingle()
-      .then(({ data }) => { if (data?.value) setAboutImg(data.value); });
+    supabase
+      .from("site_config")
+      .select("key, value")
+      .in("key", ["about_image", "about_heading", "about_subtitle", "about_para1", "about_para2", "about_stats"])
+      .then(({ data }) => {
+        if (!data) return;
+        const get = (k: string) => data.find((r) => r.key === k)?.value || "";
+        if (get("about_image"))   setAboutImg(get("about_image"));
+        if (get("about_heading"))  setHeading(get("about_heading"));
+        if (get("about_subtitle")) setSubtitle(get("about_subtitle"));
+        if (get("about_para1"))    setPara1(get("about_para1"));
+        if (get("about_para2"))    setPara2(get("about_para2"));
+        if (get("about_stats")) {
+          try { setStats(JSON.parse(get("about_stats"))); } catch { /* keep default */ }
+        }
+      });
   }, []);
 
   return (
@@ -56,23 +75,23 @@ export default function AboutUs() {
                 marginBottom: 16,
               }}
             >
-              About Jaimin Modi Photography
+              {heading}
             </h2>
             <p style={{ fontSize: 13, fontWeight: 700, color: "#E8906D", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>
-              Wedding &amp; Candid Photographer · Kadi, Gujarat
+              {subtitle}
             </p>
 
             <p style={{ fontSize: 15, color: "#555", lineHeight: 1.85, marginBottom: 16 }}>
-              Welcome to <strong>Jaimin Modi Photography</strong> — one of the most trusted photography studios in <strong>Kadi, Mehsana, Gujarat</strong>. We specialise in capturing life's most precious moments through authentic, artistic, and emotionally rich imagery.
+              {para1}
             </p>
 
             <p style={{ fontSize: 15, color: "#555", lineHeight: 1.85, marginBottom: 24 }}>
-              From <strong>candid wedding photography</strong> and <strong>pre-wedding shoots</strong> to <strong>model portfolios</strong>, <strong>baby photography</strong>, and <strong>cinematic video</strong> — our studio brings creativity and passion to every frame. With years of experience serving clients across <strong>Kadi, Mehsana, Ahmedabad</strong>, and all of <strong>Gujarat</strong>, we understand how to tell your story beautifully.
+              {para2}
             </p>
 
             {/* Stats */}
             <div className="about-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-              {highlights.map((h) => (
+              {stats.map((h) => (
                 <div key={h.label} style={{ textAlign: "center", padding: "14px 8px", background: "#fef8f5", borderRadius: 10, border: "1px solid rgba(232,144,109,0.15)" }}>
                   <p style={{ fontSize: "clamp(20px, 2.5vw, 28px)", fontWeight: 800, color: "#E8906D", margin: "0 0 4px", fontFamily: "var(--font-display)" }}>{h.number}</p>
                   <p style={{ fontSize: 11, color: "#777", margin: 0, letterSpacing: "0.04em", lineHeight: 1.3 }}>{h.label}</p>
