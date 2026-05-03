@@ -30,15 +30,18 @@ export default function Testimonials() {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    supabase
-      .from("testimonials")
-      .select("id, name, location, rating, review")
-      .order("sort_order", { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) setItems(data);
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from("testimonials")
+          .select("id, name, location, rating, review")
+          .order("sort_order", { ascending: true });
+        if (data && data.length > 0) setItems(data as Testimonial[]);
         else setItems(testimonialsJson as Testimonial[]);
-      })
-      .catch(() => setItems(testimonialsJson as Testimonial[]));
+      } catch {
+        setItems(testimonialsJson as Testimonial[]);
+      }
+    })();
   }, []);
 
   useEffect(() => {
