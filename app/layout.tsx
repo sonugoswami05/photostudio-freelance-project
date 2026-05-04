@@ -68,6 +68,10 @@ export const metadata: Metadata = {
   creator: "Jaimin Modi Photography",
   publisher: "Jaimin Modi Photography",
 
+  verification: {
+    google: "Q5dfA3koL005kgu6TyNB-O3acYhO7pkt6ke_rnL26sM",
+  },
+
   alternates: {
     canonical: SITE_URL,
     languages: {
