@@ -54,11 +54,9 @@ export default function InstagramReels() {
   if (!configured || !reels.length) return null;
 
   const openInstagram = (url: string) => {
+    window.open(url, "_blank");
     setOpening(true);
-    setTimeout(() => {
-      window.open(url, "_blank");
-      setTimeout(() => setOpening(false), 700);
-    }, 1050);
+    setTimeout(() => setOpening(false), 1500);
   };
 
   return (
