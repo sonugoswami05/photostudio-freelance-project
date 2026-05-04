@@ -33,7 +33,7 @@ export default function Hero() {
         )}
         <div className="hero-gradient" style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(to right, rgba(255,255,255,0.93) 0%, rgba(255,255,255,0.82) 30%, rgba(255,255,255,0.35) 55%, rgba(255,255,255,0) 75%)",
+          background: "linear-gradient(to right, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.40) 40%, rgba(0,0,0,0.10) 70%, rgba(0,0,0,0) 100%)",
         }} />
       </div>
 
@@ -41,12 +41,13 @@ export default function Hero() {
         <div className="hero-content" style={{ paddingLeft: "clamp(25px, 5vw, 80px)", paddingRight: 16, maxWidth: 520 }}>
           <h1 className="hero-h1" style={{
             fontFamily: "var(--font-display)", fontSize: "clamp(28px, 5vw, 56px)",
-            fontWeight: 700, fontStyle: "italic", color: "#222", lineHeight: 1.2, margin: "0 0 10px",
+            fontWeight: 700, fontStyle: "italic", color: "#fff", lineHeight: 1.2, margin: "0 0 10px",
+            textShadow: "0 2px 16px rgba(0,0,0,0.4)",
           }}>Jaimin Modi Photography</h1>
-          <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "#555", margin: "0 0 6px", letterSpacing: "0.04em" }}>
+          <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "rgba(255,255,255,0.88)", margin: "0 0 6px", letterSpacing: "0.04em" }}>
             Wedding &amp; Candid Photographer
           </p>
-          <p style={{ fontSize: "clamp(12px, 1.2vw, 14px)", color: "#777", margin: "0 0 28px", letterSpacing: "0.08em" }}>
+          <p style={{ fontSize: "clamp(12px, 1.2vw, 14px)", color: "rgba(255,255,255,0.65)", margin: "0 0 28px", letterSpacing: "0.08em" }}>
             Kadi · Mehsana · Gujarat
           </p>
           <button
@@ -83,8 +84,8 @@ export default function Hero() {
             flex-direction: column;
             align-items: center;
           }
-          .hero-h1 { color: #fff !important; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
-          .hero-sub { color: rgba(255,255,255,0.8) !important; letter-spacing: 0.12em !important; text-transform: uppercase; font-size: 12px !important; }
+          .hero-h1 { text-shadow: 0 2px 16px rgba(0,0,0,0.6); }
+          .hero-sub { color: rgba(255,255,255,0.85) !important; letter-spacing: 0.12em !important; text-transform: uppercase; font-size: 12px !important; }
         }
       `}</style>
     </section>
