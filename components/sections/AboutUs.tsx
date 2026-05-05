@@ -15,6 +15,7 @@ const DEFAULT_STATS = [
 
 export default function AboutUs() {
   const [aboutImg,  setAboutImg]  = useState(DEFAULT_IMG);
+  const [imgError,  setImgError]  = useState(false);
   const [heading,   setHeading]   = useState("About Jaimin Modi Photography");
   const [subtitle,  setSubtitle]  = useState("Wedding & Candid Photographer · Kadi, Gujarat");
   const [para1,     setPara1]     = useState("Welcome to Jaimin Modi Photography — one of the most trusted photography studios in Kadi, Mehsana, Gujarat. We specialise in capturing life's most precious moments through authentic, artistic, and emotionally rich imagery.");
@@ -29,7 +30,7 @@ export default function AboutUs() {
       .then(({ data }) => {
         if (!data) return;
         const get = (k: string) => data.find((r) => r.key === k)?.value || "";
-        if (get("about_image"))   setAboutImg(get("about_image"));
+        if (get("about_image")) { setImgError(false); setAboutImg(get("about_image")); }
         if (get("about_heading"))  setHeading(get("about_heading"));
         if (get("about_subtitle")) setSubtitle(get("about_subtitle"));
         if (get("about_para1"))    setPara1(get("about_para1"));
@@ -39,6 +40,13 @@ export default function AboutUs() {
         }
       });
   }, []);
+
+  const handleImgError = () => {
+    if (aboutImg !== DEFAULT_IMG) {
+      setImgError(true);
+      setAboutImg(DEFAULT_IMG);
+    }
+  };
 
   return (
     <section
@@ -53,15 +61,15 @@ export default function AboutUs() {
         <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
 
           {/* Image */}
-          <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#f0f0f0", boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+          <div style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: 12, overflow: "hidden", background: "#e8e0d8", boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
             <Image
-              src={aboutImg}
+              src={imgError ? DEFAULT_IMG : aboutImg}
               alt="Jaimin Modi Photography studio — professional photographer in Kadi, Gujarat"
               fill
               sizes="(max-width: 767px) 100vw, 50vw"
               style={{ objectFit: "cover" }}
               loading="lazy"
-              unoptimized
+              onError={handleImgError}
             />
           </div>
 

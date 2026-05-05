@@ -12,15 +12,40 @@ const isVideo = (url: string) => VIDEO_EXTS.some((ext) => url.toLowerCase().spli
 export default function Hero() {
   const { openEnquire } = useModal();
   const [heroMedia, setHeroMedia] = useState(DEFAULT);
+  const [imgError, setImgError]   = useState(false);
 
   useEffect(() => {
-    supabase.from("site_config").select("value").eq("key", "hero_image").maybeSingle()
-      .then(({ data }) => { if (data?.value) setHeroMedia(data.value); });
+    supabase
+      .from("site_config")
+      .select("value")
+      .eq("key", "hero_image")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) {
+          setImgError(false);
+          setHeroMedia(data.value);
+        }
+      });
   }, []);
 
+  // On image error fall back to default
+  const handleImgError = () => {
+    if (heroMedia !== DEFAULT) {
+      setImgError(true);
+      setHeroMedia(DEFAULT);
+    }
+  };
+
   return (
-    <section id="home" aria-label="Jaimin Modi Photography – Wedding & Candid Photographer in Kadi, Gujarat" itemScope itemType="https://schema.org/WPHeader" style={{ position: "relative", width: "100%", minHeight: "58vh" }}>
-      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+    <section
+      id="home"
+      aria-label="Jaimin Modi Photography – Wedding & Candid Photographer in Kadi, Gujarat"
+      itemScope
+      itemType="https://schema.org/WPHeader"
+      style={{ position: "relative", width: "100%", minHeight: "58vh" }}
+    >
+      {/* Background: dark placeholder while image loads */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 0, background: "#1a1a1a" }}>
         {isVideo(heroMedia) ? (
           <video
             src={heroMedia}
@@ -28,36 +53,86 @@ export default function Hero() {
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <Image src={heroMedia} alt="MD Studio" fill priority sizes="100vw"
-            style={{ objectFit: "cover", objectPosition: "center" }} unoptimized />
+          <Image
+            src={imgError ? DEFAULT : heroMedia}
+            alt="Jaimin Modi Photography – Wedding studio Kadi Gujarat"
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit: "cover", objectPosition: "center" }}
+            onError={handleImgError}
+          />
         )}
-        <div className="hero-gradient" style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(to right, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.40) 40%, rgba(0,0,0,0.10) 70%, rgba(0,0,0,0) 100%)",
-        }} />
+        <div
+          className="hero-gradient"
+          style={{
+            position: "absolute", inset: 0,
+            background:
+              "linear-gradient(to right, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.40) 40%, rgba(0,0,0,0.10) 70%, rgba(0,0,0,0) 100%)",
+          }}
+        />
       </div>
 
-      <div className="hero-inner" style={{ position: "relative", zIndex: 1, minHeight: "58vh", display: "flex", alignItems: "center" }}>
-        <div className="hero-content" style={{ paddingLeft: "clamp(25px, 5vw, 80px)", paddingRight: 16, maxWidth: 520 }}>
-          <h1 className="hero-h1" style={{
-            fontFamily: "var(--font-display)", fontSize: "clamp(28px, 5vw, 56px)",
-            fontWeight: 700, fontStyle: "italic", color: "#fff", lineHeight: 1.2, margin: "0 0 10px",
-            textShadow: "0 2px 16px rgba(0,0,0,0.4)",
-          }}>Jaimin Modi Photography</h1>
-          <p className="hero-sub" style={{ fontSize: "clamp(14px, 1.8vw, 18px)", color: "rgba(255,255,255,0.88)", margin: "0 0 6px", letterSpacing: "0.04em" }}>
+      <div
+        className="hero-inner"
+        style={{ position: "relative", zIndex: 1, minHeight: "58vh", display: "flex", alignItems: "center" }}
+      >
+        <div
+          className="hero-content"
+          style={{ paddingLeft: "clamp(25px, 5vw, 80px)", paddingRight: 16, maxWidth: 520 }}
+        >
+          <h1
+            className="hero-h1"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(28px, 5vw, 56px)",
+              fontWeight: 700,
+              fontStyle: "italic",
+              color: "#fff",
+              lineHeight: 1.2,
+              margin: "0 0 10px",
+              textShadow: "0 2px 16px rgba(0,0,0,0.4)",
+            }}
+          >
+            Jaimin Modi Photography
+          </h1>
+          <p
+            className="hero-sub"
+            style={{
+              fontSize: "clamp(14px, 1.8vw, 18px)",
+              color: "rgba(255,255,255,0.88)",
+              margin: "0 0 6px",
+              letterSpacing: "0.04em",
+            }}
+          >
             Wedding &amp; Candid Photographer
           </p>
-          <p style={{ fontSize: "clamp(12px, 1.2vw, 14px)", color: "rgba(255,255,255,0.65)", margin: "0 0 28px", letterSpacing: "0.08em" }}>
+          <p
+            style={{
+              fontSize: "clamp(12px, 1.2vw, 14px)",
+              color: "rgba(255,255,255,0.65)",
+              margin: "0 0 28px",
+              letterSpacing: "0.08em",
+            }}
+          >
             Kadi · Mehsana · Gujarat
           </p>
           <button
             onClick={() => openEnquire()}
             onTouchEnd={(e) => { e.preventDefault(); openEnquire(); }}
             style={{
-              background: "#A0845C", color: "#fff", border: "none", borderRadius: 999,
-              padding: "12px 32px", fontSize: 14, fontWeight: 600, cursor: "pointer",
-              letterSpacing: "0.02em", boxShadow: "0 2px 8px rgba(160,132,92,0.4)",
-              position: "relative", zIndex: 2,
+              background: "#A0845C",
+              color: "#fff",
+              border: "none",
+              borderRadius: 999,
+              padding: "12px 32px",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              letterSpacing: "0.02em",
+              boxShadow: "0 2px 8px rgba(160,132,92,0.4)",
+              position: "relative",
+              zIndex: 2,
             }}
           >
             Enquire Now
@@ -85,7 +160,12 @@ export default function Hero() {
             align-items: center;
           }
           .hero-h1 { text-shadow: 0 2px 16px rgba(0,0,0,0.6); }
-          .hero-sub { color: rgba(255,255,255,0.85) !important; letter-spacing: 0.12em !important; text-transform: uppercase; font-size: 12px !important; }
+          .hero-sub {
+            color: rgba(255,255,255,0.85) !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase;
+            font-size: 12px !important;
+          }
         }
       `}</style>
     </section>
