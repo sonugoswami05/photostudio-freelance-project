@@ -36,6 +36,17 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/favicon.ico",  sizes: "any" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", type: "image/png" },
+    ],
+    shortcut: "/icon.png",
+  },
+
   title: {
     default: "Jaimin Modi Photography | Best Wedding & Candid Photographer in Kadi, Gujarat",
     template: "%s | Jaimin Modi Photography – Kadi, Gujarat",
@@ -148,9 +159,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://translate.google.com" />
-        {/* Favicon */}
-        <link rel="icon"             href="/favicon.ico" sizes="any" />
-        <link rel="icon"             href="/icon.svg"    type="image/svg+xml" />
+        {/* Favicon – icon.png & apple-icon.png in app/ are auto-served by Next.js */}
+        <link rel="icon"             href="/icon.png"           type="image/png" />
+        <link rel="shortcut icon"    href="/icon.png"           type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body style={{ fontFamily: "var(--font-body, Open Sans, sans-serif)" }}>
