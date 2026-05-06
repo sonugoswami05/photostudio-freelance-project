@@ -153,12 +153,46 @@ export default function AdminPage() {
     if (data) setServices(data);
   };
 
+  // Compress image using Canvas API before upload (reduces Supabase egress by 10–50x)
+  const compressImage = (file: File, maxWidth = 1920, quality = 0.82): Promise<File> =>
+    new Promise((resolve) => {
+      // Skip tiny files or non-images
+      if (file.size < 200 * 1024 || !file.type.startsWith("image/")) { resolve(file); return; }
+      const img = new window.Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        let { width, height } = img;
+        if (width > maxWidth) { height = Math.round(height * maxWidth / width); width = maxWidth; }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const outName = file.name.replace(/\.[^.]+$/, ".jpg");
+              resolve(new File([blob], outName, { type: "image/jpeg" }));
+            } else resolve(file);
+          },
+          "image/jpeg",
+          quality,
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
+      img.src = objectUrl;
+    });
+
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
-    const ext = file.name.split(".").pop();
-    const path = `${folder}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("studio-images").upload(path, file, {
-      contentType: file.type || "application/octet-stream",
-      cacheControl: "3600",
+    // Auto-compress before upload
+    const compressed = await compressImage(file);
+    const isImg = compressed.type === "image/jpeg";
+    const ext   = isImg ? "jpg" : (file.name.split(".").pop() ?? "bin");
+    const path  = `${folder}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("studio-images").upload(path, compressed, {
+      contentType: isImg ? "image/jpeg" : (file.type || "application/octet-stream"),
+      cacheControl: "31536000",   // 1-year cache on CDN (immutable per path)
     });
     if (error) { setStatus("Upload failed: " + error.message); return null; }
     const { data: { publicUrl } } = supabase.storage.from("studio-images").getPublicUrl(path);
