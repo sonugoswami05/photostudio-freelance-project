@@ -248,7 +248,7 @@ export default function ContactSection() {
       </div>
 
       <style>{`
-        ::placeholder { color: rgba(255,255,255,0.35) !important; }
+        .section-contact ::placeholder { color: rgba(255,255,255,0.35) !important; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes studioLightFloat {
           0%, 100% { transform: translate(0, 0); opacity: 0.8; }
