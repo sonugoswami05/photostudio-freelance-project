@@ -197,10 +197,12 @@ export async function POST(req: NextRequest) {
     // Don't fail the whole request if DB save fails — still send email + WA
   }
 
-  // 2. Send email (fire-and-forget — don't let email failure block response)
-  sendEmailNotification(data).catch((err) => {
-    console.error("[enquiry] Email send failed:", err.message);
-  });
+  // 2. Send email — await so Vercel doesn't kill the function before it completes
+  try {
+    await sendEmailNotification(data);
+  } catch (err) {
+    console.error("[enquiry] Email send failed:", err instanceof Error ? err.message : String(err));
+  }
 
   // 3. Return WhatsApp URL so client can open it
   return NextResponse.json({
