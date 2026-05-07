@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
       // Supabase Storage CDN
       { protocol: "https", hostname: "*.supabase.co",       pathname: "/**" },
       { protocol: "https", hostname: "*.supabase.in",       pathname: "/**" },
+      // Cloudflare R2
+      { protocol: "https", hostname: "*.r2.dev",            pathname: "/**" },
+      { protocol: "https", hostname: "pub-*.r2.dev",        pathname: "/**" },
     ],
     formats:          ["image/avif", "image/webp"],
     minimumCacheTTL:  3600,
