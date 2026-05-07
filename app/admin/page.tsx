@@ -201,8 +201,10 @@ export default function AdminPage() {
       return publicUrl;
 
     } catch (err) {
-      // Fallback to Supabase if R2 not configured
-      console.warn("R2 upload failed, falling back to Supabase:", err);
+      // Show actual error and fallback to Supabase
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error("R2 upload failed:", errMsg);
+      setStatus("⚠️ R2 failed (" + errMsg + "), using Supabase...");
       const isImg = compressed.type === "image/jpeg";
       const ext   = isImg ? "jpg" : (file.name.split(".").pop() ?? "bin");
       const path  = `${folder}/${Date.now()}.${ext}`;

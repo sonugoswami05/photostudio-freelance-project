@@ -1,6 +1,8 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 30; // 30 second timeout
+
 const R2 = new S3Client({
   region: "auto",
   endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -37,7 +39,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ publicUrl });
 
   } catch (err) {
-    console.error("R2 upload error:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("R2 upload error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
