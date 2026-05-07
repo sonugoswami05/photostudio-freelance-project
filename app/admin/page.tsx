@@ -189,34 +189,46 @@ export default function AdminPage() {
     const compressed = await compressImage(file);
 
     try {
-      // Convert file to base64 in chunks (avoids stack overflow on large files)
-      const arrayBuffer = await compressed.arrayBuffer();
-      const uint8 = new Uint8Array(arrayBuffer);
-      let binary = "";
-      const chunk = 8192;
-      for (let i = 0; i < uint8.length; i += chunk) {
-        binary += String.fromCharCode(...uint8.subarray(i, i + chunk));
+      const isVideo = compressed.type.startsWith("video/");
+
+      if (isVideo) {
+        // ── Video: get presigned URL → upload directly to R2 (bypasses Vercel 4.5MB limit) ──
+        const res = await fetch("/api/upload-url", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder, filename: compressed.name, contentType: compressed.type, presign: true }),
+        });
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || res.statusText); }
+        const { uploadUrl, publicUrl } = await res.json();
+
+        const uploadRes = await fetch(uploadUrl, {
+          method:  "PUT",
+          headers: { "Content-Type": compressed.type },
+          body:    compressed,
+        });
+        if (!uploadRes.ok) throw new Error(`R2 PUT failed: ${uploadRes.status}`);
+        return publicUrl;
+
+      } else {
+        // ── Image: base64 → server → R2 (no CORS needed) ──
+        const arrayBuffer = await compressed.arrayBuffer();
+        const uint8 = new Uint8Array(arrayBuffer);
+        let binary = "";
+        const chunk = 8192;
+        for (let i = 0; i < uint8.length; i += chunk) {
+          binary += String.fromCharCode(...uint8.subarray(i, i + chunk));
+        }
+        const base64 = btoa(binary);
+
+        const res = await fetch("/api/upload-url", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder, filename: compressed.name, contentType: compressed.type || "image/jpeg", base64 }),
+        });
+        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || res.statusText); }
+        const { publicUrl } = await res.json();
+        return publicUrl;
       }
-      const base64 = btoa(binary);
-
-      const res = await fetch("/api/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          folder,
-          filename:    compressed.name,
-          contentType: compressed.type || "image/jpeg",
-          base64,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || res.statusText);
-      }
-
-      const { publicUrl } = await res.json();
-      return publicUrl;
 
     } catch (err) {
       // Show actual error and fallback to Supabase
