@@ -189,9 +189,15 @@ export default function AdminPage() {
     const compressed = await compressImage(file);
 
     try {
-      // Convert file to base64 and send as JSON to avoid FormData parsing issues
+      // Convert file to base64 in chunks (avoids stack overflow on large files)
       const arrayBuffer = await compressed.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const uint8 = new Uint8Array(arrayBuffer);
+      let binary = "";
+      const chunk = 8192;
+      for (let i = 0; i < uint8.length; i += chunk) {
+        binary += String.fromCharCode(...uint8.subarray(i, i + chunk));
+      }
+      const base64 = btoa(binary);
 
       const res = await fetch("/api/upload-url", {
         method: "POST",
