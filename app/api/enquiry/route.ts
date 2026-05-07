@@ -198,15 +198,23 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Send email — await so Vercel doesn't kill the function before it completes
+  let emailStatus = "not_attempted";
   try {
-    await sendEmailNotification(data);
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      emailStatus = `env_missing: GMAIL_USER=${!!process.env.GMAIL_USER} GMAIL_APP_PASSWORD=${!!process.env.GMAIL_APP_PASSWORD}`;
+    } else {
+      await sendEmailNotification(data);
+      emailStatus = "sent";
+    }
   } catch (err) {
-    console.error("[enquiry] Email send failed:", err instanceof Error ? err.message : String(err));
+    emailStatus = "error: " + (err instanceof Error ? err.message : String(err));
+    console.error("[enquiry] Email send failed:", emailStatus);
   }
 
   // 3. Return WhatsApp URL so client can open it
   return NextResponse.json({
     success:      true,
+    emailStatus,
     whatsappUrl:  buildWhatsAppUrl(data),
   });
 }
