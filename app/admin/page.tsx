@@ -189,13 +189,25 @@ export default function AdminPage() {
     const compressed = await compressImage(file);
 
     try {
-      // Upload via server-side API route → Cloudflare R2 (no CORS issues)
-      const form = new FormData();
-      form.append("file",   compressed);
-      form.append("folder", folder);
+      // Convert file to base64 and send as JSON to avoid FormData parsing issues
+      const arrayBuffer = await compressed.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-      const res = await fetch("/api/upload-url", { method: "POST", body: form });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await fetch("/api/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          folder,
+          filename:    compressed.name,
+          contentType: compressed.type || "image/jpeg",
+          base64,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || res.statusText);
+      }
 
       const { publicUrl } = await res.json();
       return publicUrl;

@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from "next/server";
 
-export const maxDuration = 30; // 30 second timeout
+export const maxDuration = 30;
 
 const R2 = new S3Client({
   region: "auto",
@@ -14,25 +14,23 @@ const R2 = new S3Client({
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file     = formData.get("file") as File | null;
-    const folder   = formData.get("folder") as string | null;
+    // Accept JSON body with base64-encoded file
+    const { folder, filename, contentType, base64 } = await req.json();
 
-    if (!file || !folder) {
-      return NextResponse.json({ error: "Missing file or folder" }, { status: 400 });
+    if (!folder || !base64) {
+      return NextResponse.json({ error: "Missing folder or base64 data" }, { status: 400 });
     }
 
-    const ext         = file.name.split(".").pop() ?? "jpg";
-    const key         = `${folder}/${Date.now()}.${ext}`;
-    const bucket      = process.env.CLOUDFLARE_R2_BUCKET!;
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer      = Buffer.from(arrayBuffer);
+    const buffer  = Buffer.from(base64, "base64");
+    const ext     = (filename ?? "file").split(".").pop() ?? "jpg";
+    const key     = `${folder}/${Date.now()}.${ext}`;
+    const bucket  = process.env.CLOUDFLARE_R2_BUCKET!;
 
     await R2.send(new PutObjectCommand({
       Bucket:      bucket,
       Key:         key,
       Body:        buffer,
-      ContentType: file.type || "image/jpeg",
+      ContentType: contentType || "image/jpeg",
     }));
 
     const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${key}`;
