@@ -5,10 +5,10 @@ export const maxDuration = 30;
 
 const R2 = new S3Client({
   region: "auto",
-  endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID || "a22e1c29a8e14fd58319b3b81663414a"}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId:     process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY!,
+    accessKeyId:     process.env.CLOUDFLARE_R2_ACCESS_KEY_ID     || "e5fe083f0486c74793de0597503a2804",
+    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY        || "2f6149f32b63316be43f646e59b09985b48542240261069a8d2cd6a602c81f6c",
   },
 });
 
@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
     const buffer  = Buffer.from(base64, "base64");
     const ext     = (filename ?? "file").split(".").pop() ?? "jpg";
     const key     = `${folder}/${Date.now()}.${ext}`;
-    const bucket  = process.env.CLOUDFLARE_R2_BUCKET!;
+    const bucket  = process.env.CLOUDFLARE_R2_BUCKET || "studio-images";
+    const pubUrl  = process.env.CLOUDFLARE_R2_PUBLIC_URL || "https://pub-698ac57851a9467e9ef80ad4e6424aca.r2.dev";
 
     await R2.send(new PutObjectCommand({
       Bucket:      bucket,
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       ContentType: contentType || "image/jpeg",
     }));
 
-    const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${key}`;
+    const publicUrl = `${pubUrl}/${key}`;
     return NextResponse.json({ publicUrl });
 
   } catch (err) {
