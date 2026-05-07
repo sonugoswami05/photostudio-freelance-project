@@ -231,20 +231,10 @@ export default function AdminPage() {
       }
 
     } catch (err) {
-      // Show actual error and fallback to Supabase
       const errMsg = err instanceof Error ? err.message : String(err);
       console.error("R2 upload failed:", errMsg);
-      setStatus("⚠️ R2 failed (" + errMsg + "), using Supabase...");
-      const isImg = compressed.type === "image/jpeg";
-      const ext   = isImg ? "jpg" : (file.name.split(".").pop() ?? "bin");
-      const path  = `${folder}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("studio-images").upload(path, compressed, {
-        contentType: isImg ? "image/jpeg" : (file.type || "application/octet-stream"),
-        cacheControl: "31536000",
-      });
-      if (error) { setStatus("Upload failed: " + error.message); return null; }
-      const { data: { publicUrl } } = supabase.storage.from("studio-images").getPublicUrl(path);
-      return publicUrl;
+      setStatus("✗ Upload failed: " + errMsg);
+      return null;
     }
   };
 
@@ -262,8 +252,6 @@ export default function AdminPage() {
 
   const deleteGalleryImage = async (img: GalleryImage) => {
     if (!confirm("Delete this image?")) return;
-    const path = img.url.split("/studio-images/")[1];
-    if (path) await supabase.storage.from("studio-images").remove([path]);
     await supabase.from("gallery_images").delete().eq("id", img.id);
     setGallery((g) => g.filter((i) => i.id !== img.id));
     setStatus("✓ Image deleted.");
