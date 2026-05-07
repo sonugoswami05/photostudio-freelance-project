@@ -1,5 +1,4 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextRequest, NextResponse } from "next/server";
 
 const R2 = new S3Client({
@@ -13,30 +12,32 @@ const R2 = new S3Client({
 
 export async function POST(req: NextRequest) {
   try {
-    const { folder, filename, contentType } = await req.json();
+    const formData = await req.formData();
+    const file     = formData.get("file") as File | null;
+    const folder   = formData.get("folder") as string | null;
 
-    if (!folder || !filename) {
-      return NextResponse.json({ error: "Missing folder or filename" }, { status: 400 });
+    if (!file || !folder) {
+      return NextResponse.json({ error: "Missing file or folder" }, { status: 400 });
     }
 
-    const key = `${folder}/${Date.now()}-${filename}`;
-    const bucket = process.env.CLOUDFLARE_R2_BUCKET!;
+    const ext         = file.name.split(".").pop() ?? "jpg";
+    const key         = `${folder}/${Date.now()}.${ext}`;
+    const bucket      = process.env.CLOUDFLARE_R2_BUCKET!;
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer      = Buffer.from(arrayBuffer);
 
-    const command = new PutObjectCommand({
+    await R2.send(new PutObjectCommand({
       Bucket:      bucket,
       Key:         key,
-      ContentType: contentType || "image/jpeg",
-    });
+      Body:        buffer,
+      ContentType: file.type || "image/jpeg",
+    }));
 
-    // Presigned URL valid for 5 minutes
-    const uploadUrl = await getSignedUrl(R2, command, { expiresIn: 300 });
-
-    // Public URL for accessing the file after upload
     const publicUrl = `${process.env.CLOUDFLARE_R2_PUBLIC_URL}/${key}`;
+    return NextResponse.json({ publicUrl });
 
-    return NextResponse.json({ uploadUrl, publicUrl, key });
   } catch (err) {
-    console.error("R2 presign error:", err);
-    return NextResponse.json({ error: "Failed to generate upload URL" }, { status: 500 });
+    console.error("R2 upload error:", err);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

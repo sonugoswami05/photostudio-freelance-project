@@ -187,39 +187,25 @@ export default function AdminPage() {
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
     // Compress image before upload
     const compressed = await compressImage(file);
-    const isImg = compressed.type === "image/jpeg";
-    const ext   = isImg ? "jpg" : (file.name.split(".").pop() ?? "bin");
-    const filename = `${Date.now()}.${ext}`;
 
     try {
-      // Get presigned URL from Cloudflare R2
-      const res = await fetch("/api/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          folder,
-          filename,
-          contentType: isImg ? "image/jpeg" : (file.type || "application/octet-stream"),
-        }),
-      });
+      // Upload via server-side API route → Cloudflare R2 (no CORS issues)
+      const form = new FormData();
+      form.append("file",   compressed);
+      form.append("folder", folder);
 
-      if (!res.ok) throw new Error("Failed to get upload URL");
-      const { uploadUrl, publicUrl } = await res.json();
+      const res = await fetch("/api/upload-url", { method: "POST", body: form });
+      if (!res.ok) throw new Error(await res.text());
 
-      // Upload directly to R2
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": isImg ? "image/jpeg" : (file.type || "application/octet-stream") },
-        body: compressed,
-      });
-
-      if (!uploadRes.ok) throw new Error("Upload to R2 failed");
+      const { publicUrl } = await res.json();
       return publicUrl;
 
     } catch (err) {
       // Fallback to Supabase if R2 not configured
       console.warn("R2 upload failed, falling back to Supabase:", err);
-      const path = `${folder}/${filename}`;
+      const isImg = compressed.type === "image/jpeg";
+      const ext   = isImg ? "jpg" : (file.name.split(".").pop() ?? "bin");
+      const path  = `${folder}/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("studio-images").upload(path, compressed, {
         contentType: isImg ? "image/jpeg" : (file.type || "application/octet-stream"),
         cacheControl: "31536000",
