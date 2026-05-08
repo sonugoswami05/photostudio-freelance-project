@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Open_Sans } from "next/font/google";
 import Script from "next/script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { ModalProvider } from "@/contexts/ModalContext";
 import TopBar from "@/components/layout/TopBar";
@@ -182,6 +183,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <EnquireModal />
           <ProfileModal />
         </ModalProvider>
+        <SpeedInsights />
 
         {/* Hidden Google Translate element */}
         <div id="google_translate_element" style={{ display: "none" }} />
